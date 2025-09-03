@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('historicoContagensBebidas', JSON.stringify(novoHistorico));
     };
 
+
     // --- FUNÇÕES DE LÓGICA DE NEGÓCIO ---
 
     const calcularGastoEstimado = (estoqueAtual, ultimoEstoque) => {
@@ -56,12 +57,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return gastoSemanal > 0 ? Math.ceil(gastoSemanal * 1.2) : 0;
     };
 
-    const isDomingo = (data) => {
-        const dateObj = new Date(data);
+    const isDomingo = (dataString) => {
+        const dateObj = new Date(dataString.replace(/-/g, '/')); // Corrige o formato da data para compatibilidade
         return dateObj.getDay() === 0; // 0 = Domingo
     };
     
-    // NOVO: Função para calcular o consumo semanal e a sugestão de compra
     const calcularEstatisticas = () => {
         const historico = getHistoricoContagensBebidas();
         const ultimaContagem = historico[historico.length - 1];
@@ -171,35 +171,70 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // NOVO: Adiciona as estatísticas ao relatório
-        const estatisticas = calcularEstatisticas();
-        
-        let tabelaRows = '';
-        Object.keys(contagem.detalhesContagem).forEach(bebidaId => {
-            const bebidaInfo = bebidas.find(b => b.id === bebidaId) || { nome: 'Desconhecida', unidade: 'N/A', unidadePorFardo: 1 };
-            const dados = contagem.detalhesContagem[bebidaId];
-            const stats = estatisticas[bebidaId] || {};
+        const stats = calcularEstatisticas();
+        const ehDomingo = isDomingo(contagem.data);
+
+        let tabelaContagemRows = '';
+        let tabelaEstatisticasRows = '';
+        let hasStats = Object.keys(stats).length > 0;
+
+        bebidas.forEach(bebida => {
+            const dados = contagem.detalhesContagem[bebida.id] || {};
+            const totalUnidades = dados.totalUnidades || 0;
+            const statsBebida = stats[bebida.id] || {};
             
             let depositoTexto = '';
-            if (bebidaInfo.unidade === 'caixa' || bebidaInfo.unidade === 'fardo') {
-                depositoTexto = `${dados.deposito} ${bebidaInfo.unidade}s e ${dados.unidadesAvulsas} unidades`;
+            if (bebida.unidade === 'caixa' || bebida.unidade === 'fardo') {
+                depositoTexto = `${dados.deposito || 0} ${bebida.unidade}s e ${dados.unidadesAvulsas || 0} unidades`;
             } else {
-                depositoTexto = `${dados.deposito} unidades`;
+                depositoTexto = `${dados.deposito || 0} unidades`;
             }
 
-            tabelaRows += `
+            // Tabela Principal de Contagem
+            tabelaContagemRows += `
                 <tr>
-                    <td style="padding: 10px; border: 1px solid #000;">${bebidaInfo.nome}</td>
+                    <td style="padding: 10px; border: 1px solid #000;">${bebida.nome}</td>
                     <td style="padding: 10px; border: 1px solid #000; text-align: center;">${depositoTexto}</td>
-                    <td style="padding: 10px; border: 1px solid #000; text-align: center;">${dados.freezer}</td>
-                    <td style="padding: 10px; border: 1px solid #000; text-align: center;">${dados.totalUnidades}</td>
-                    <td style="padding: 10px; border: 1px solid #000; text-align: center;">${stats.gasto !== undefined ? stats.gasto : 'N/A'}</td>
-                    <td style="padding: 10px; border: 1px solid #000; text-align: center;">${stats.reposicao !== undefined ? stats.reposicao : 'N/A'}</td>
-                    <td style="padding: 10px; border: 1px solid #000; text-align: center;">${stats.sugestao !== undefined ? stats.sugestao : 'N/A'}</td>
+                    <td style="padding: 10px; border: 1px solid #000; text-align: center;">${dados.freezer || 0}</td>
+                    <td style="padding: 10px; border: 1px solid #000; text-align: center;">${totalUnidades}</td>
                 </tr>
             `;
+
+            // Tabela de Estatísticas (se houver dados)
+            if (hasStats) {
+                tabelaEstatisticasRows += `
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #000;">${bebida.nome}</td>
+                        <td style="padding: 10px; border: 1px solid #000; text-align: center;">${statsBebida.gasto !== undefined ? statsBebida.gasto : 'N/A'}</td>
+                        <td style="padding: 10px; border: 1px solid #000; text-align: center;">${statsBebida.reposicao !== undefined ? statsBebida.reposicao : 'N/A'}</td>
+                        <td style="padding: 10px; border: 1px solid #000; text-align: center;">${ehDomingo && statsBebida.sugestao !== undefined ? statsBebida.sugestao : 'N/A'}</td>
+                    </tr>
+                `;
+            }
         });
         
+        let conteudoTabelaEstatisticas = '';
+        if (hasStats) {
+            conteudoTabelaEstatisticas = `
+                <div style="margin-top: 30px;">
+                    <h2 style="text-align: center; margin-bottom: 15px; font-size: 20px;">Estatísticas de Consumo e Reposição</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px;">
+                        <thead>
+                            <tr style="background-color: #333; color: white;">
+                                <th style="padding: 12px; border: 1px solid #000; text-align: left;">BEBIDA</th>
+                                <th style="padding: 12px; border: 1px solid #000; text-align: center;">CONSUMO (UNIDADES)</th>
+                                <th style="padding: 12px; border: 1px solid #000; text-align: center;">REPOSIÇÃO (UNIDADES)</th>
+                                ${ehDomingo ? '<th style="padding: 12px; border: 1px solid #000; text-align: center;">SUGESTÃO DE COMPRA (UNIDADES)</th>' : ''}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tabelaEstatisticasRows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
         const conteudoRelatorio = `
             <div style="font-family: Arial, sans-serif; padding: 20px; color: #000;">
                 <div style="text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #000;">
@@ -213,6 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p style="margin: 5px 0; font-size: 14px; color: #333;">Nº do Registro: ${contagem.id}</p>
                 </div>
                 
+                <h2 style="text-align: center; margin-bottom: 15px; font-size: 20px;">Relatório de Contagem</h2>
                 <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px;">
                     <thead>
                         <tr style="background-color: #333; color: white;">
@@ -220,32 +256,33 @@ document.addEventListener('DOMContentLoaded', () => {
                             <th style="padding: 12px; border: 1px solid #000; text-align: center;">DEPÓSITO</th>
                             <th style="padding: 12px; border: 1px solid #000; text-align: center;">FREEZER (UNIDADES)</th>
                             <th style="padding: 12px; border: 1px solid #000; text-align: center;">TOTAL EM ESTOQUE (UNIDADES)</th>
-                            <th style="padding: 12px; border: 1px solid #000; text-align: center;">CONSUMO (UNIDADES)</th>
-                            <th style="padding: 12px; border: 1px solid #000; text-align: center;">REPOSIÇÃO (UNIDADES)</th>
-                            <th style="padding: 12px; border: 1px solid #000; text-align: center;">SUGESTÃO DE COMPRA (UNIDADES)</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${tabelaRows}
+                        ${tabelaContagemRows}
                     </tbody>
                 </table>
                 
+                ${conteudoTabelaEstatisticas}
+
                 <div style="text-align: center; margin-top: 25px; font-size: 12px; color: #6c757d;">
                     Documento gerado em ${dataAtual} às ${horaAtual}.
                 </div>
             </div>
         `;
 
+        const orientation = ehDomingo && hasStats ? 'landscape' : 'portrait';
         const options = {
             margin: 0.5,
             filename: `${filenamePrefix}_${contagem.data}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true, logging: true },
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' } // MODIFICADO: Muda para orientação paisagem para caber mais colunas
+            jsPDF: { unit: 'in', format: 'letter', orientation: orientation }
         };
 
         html2pdf().set(options).from(conteudoRelatorio).save();
     };
+
 
     // Lógica para a tela de Contagem (index.html)
     const formContagemBebidas = document.getElementById('formContagemBebidas');
@@ -280,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
             depositoCol.classList.add('col-md-6');
             depositoCol.innerHTML = `
                 <label for="deposito-${bebida.id}" class="form-label">Depósito (${bebida.unidade === 'unidade' ? 'unidades' : bebida.unidade + 's'})</label>
-                <input type="number" class="form-control" id="deposito-${bebida.id}" value="0" min="0">
+                <input type="number" class="form-control" id="deposito-${bebida.id}" value="0" min="0" data-id="${bebida.id}">
             `;
             formRow.appendChild(depositoCol);
 
@@ -290,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 avulsoCol.classList.add('col-md-6');
                 avulsoCol.innerHTML = `
                     <label for="unidades-avulsas-${bebida.id}" class="form-label">Unidades Avulsas</label>
-                    <input type="number" class="form-control" id="unidades-avulsas-${bebida.id}" value="0" min="0">
+                    <input type="number" class="form-control" id="unidades-avulsas-${bebida.id}" value="0" min="0" data-id="${bebida.id}">
                 `;
                 formRow.appendChild(avulsoCol);
             }
@@ -300,12 +337,41 @@ document.addEventListener('DOMContentLoaded', () => {
             freezerCol.classList.add('col-md-6');
             freezerCol.innerHTML = `
                 <label for="freezer-${bebida.id}" class="form-label">Freezer (unidades)</label>
-                <input type="number" class="form-control" id="freezer-${bebida.id}" value="0" min="0">
+                <input type="number" class="form-control" id="freezer-${bebida.id}" value="0" min="0" data-id="${bebida.id}">
             `;
             formRow.appendChild(freezerCol);
+            
+            // NOVO: Exibição do total em tempo real
+            const totalCol = document.createElement('div');
+            totalCol.classList.add('col-12', 'mt-3');
+            totalCol.innerHTML = `
+                <p class="fw-bold m-0">Total em Estoque: <span id="total-${bebida.id}">0</span> unidades</p>
+            `;
+            formRow.appendChild(totalCol);
 
             bebidaItem.appendChild(formRow);
             listaBebidasContainer.appendChild(bebidaItem);
+        });
+        
+        // Adiciona os event listeners para o cálculo em tempo real
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('input', () => {
+                const bebidaId = input.dataset.id;
+                const bebida = getBebidas().find(b => b.id === bebidaId);
+                
+                const depositoInput = document.getElementById(`deposito-${bebidaId}`);
+                const unidadesAvulsasInput = document.getElementById(`unidades-avulsas-${bebidaId}`);
+                const freezerInput = document.getElementById(`freezer-${bebidaId}`);
+                const totalSpan = document.getElementById(`total-${bebidaId}`);
+                
+                const deposito = parseFloat(depositoInput.value) || 0;
+                const unidadesAvulsas = parseFloat(unidadesAvulsasInput?.value) || 0;
+                const freezer = parseFloat(freezerInput.value) || 0;
+                
+                const totalUnidades = (deposito * (bebida?.unidadePorFardo || 1)) + unidadesAvulsas + freezer;
+                
+                totalSpan.textContent = totalUnidades;
+            });
         });
     };
 
