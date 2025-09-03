@@ -1,0 +1,120 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+.card {
+    border: none;
+    border-radius: 1rem;
+}
+
+.insumo-item, .bebida-item {
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.insumo-nome, .bebida-nome {
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+/* Estilo para o resultado do cálculo */
+.insumo-item [data-campo="sobrou"], .bebida-item [data-campo="total-unidades"] {
+    color: #28a745;
+    font-size: 1.5rem;
+}
+
+/* Estilo para a posição final */
+.insumo-item [data-campo="posicaoFinal"] {
+    color: #007bff;
+    font-size: 1.5rem;
+}
+
+/* Estilo para os botões de navegação */
+.btn-lg i {
+    font-size: 1.25rem;
+}
+
+/* --- Estilos para os PDFs --- */
+.relatorio-container {
+    font-family: Arial, sans-serif;
+    padding: 2rem;
+    color: #333;
+}
+
+.relatorio-cabecalho {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.relatorio-titulo {
+    margin: 0;
+    font-size: 24px;
+    font-weight: bold;
+    color: #495057;
+}
+
+.relatorio-subtitulo {
+    margin: 5px 0;
+    font-size: 16px;
+    color: #6c757d;
+}
+
+.relatorio-registro {
+    font-size: 12px;
+    color: #6c757d;
+    margin: 0;
+}
+
+.relatorio-divisoria {
+    border: 0;
+    border-top: 1px solid #dee2e6;
+    margin-top: 1rem;
+}
+
+.relatorio-info {
+    margin-bottom: 1.5rem;
+    font-size: 14px;
+}
+
+.relatorio-tabela {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    border: 1px solid #dee2e6;
+}
+
+.relatorio-tabela th, .relatorio-tabela td {
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    text-align: left;
+    font-size: 12px;
+}
+
+.relatorio-tabela thead {
+    background-color: #343a40;
+    color: white;
+}
+
+.relatorio-rodape {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 12px;
+    color: #6c757d;
+}
+
+/* Estilos para a navegação do topo */
+.navbar-brand {
+    padding-left: 1rem;
+}
+
+@media (max-width: 992px) {
+    .navbar-brand {
+        padding-left: 0;
+    }
+}
