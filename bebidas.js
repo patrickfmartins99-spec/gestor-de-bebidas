@@ -209,6 +209,111 @@ document.addEventListener('DOMContentLoaded', () => {
         html2pdf().set(options).from(conteudoRelatorio).save();
     };
 
+    // Lógica para a tela de Contagem (index.html)
+    const formContagemBebidas = document.getElementById('formContagemBebidas');
+    const listaBebidasContainer = document.getElementById('listaBebidas');
+
+    // Função para renderizar a lista de bebidas no formulário de contagem
+    const renderizarListaBebidas = () => {
+        const bebidas = getBebidas();
+        listaBebidasContainer.innerHTML = ''; // Limpa o container antes de renderizar
+
+        if (bebidas.length === 0) {
+            listaBebidasContainer.innerHTML = `<p class="text-center text-muted">Nenhuma bebida cadastrada. Vá para a tela "Gerenciar" para adicionar novas bebidas.</p>`;
+            return;
+        }
+
+        bebidas.forEach(bebida => {
+            const bebidaItem = document.createElement('div');
+            bebidaItem.classList.add('bebida-item', 'p-3', 'mb-3');
+            bebidaItem.dataset.id = bebida.id;
+
+            const bebidaNome = document.createElement('h5');
+            bebidaNome.classList.add('bebida-nome', 'mb-3');
+            bebidaNome.textContent = bebida.nome;
+            bebidaItem.appendChild(bebidaNome);
+
+            // Campos para contagem
+            const formRow = document.createElement('div');
+            formRow.classList.add('row', 'g-3');
+
+            // Campo de depósito
+            const depositoCol = document.createElement('div');
+            depositoCol.classList.add('col-md-6');
+            depositoCol.innerHTML = `
+                <label for="deposito-${bebida.id}" class="form-label">Depósito (${bebida.unidade === 'unidade' ? 'unidades' : bebida.unidade + 's'})</label>
+                <input type="number" class="form-control" id="deposito-${bebida.id}" value="0" min="0">
+            `;
+            formRow.appendChild(depositoCol);
+
+            // Se for fardo ou caixa, adiciona o campo de unidades avulsas
+            if (bebida.unidade !== 'unidade') {
+                const avulsoCol = document.createElement('div');
+                avulsoCol.classList.add('col-md-6');
+                avulsoCol.innerHTML = `
+                    <label for="unidades-avulsas-${bebida.id}" class="form-label">Unidades Avulsas</label>
+                    <input type="number" class="form-control" id="unidades-avulsas-${bebida.id}" value="0" min="0">
+                `;
+                formRow.appendChild(avulsoCol);
+            }
+
+            // Campo para freezer
+            const freezerCol = document.createElement('div');
+            freezerCol.classList.add('col-md-6');
+            freezerCol.innerHTML = `
+                <label for="freezer-${bebida.id}" class="form-label">Freezer (unidades)</label>
+                <input type="number" class="form-control" id="freezer-${bebida.id}" value="0" min="0">
+            `;
+            formRow.appendChild(freezerCol);
+
+            bebidaItem.appendChild(formRow);
+            listaBebidasContainer.appendChild(bebidaItem);
+        });
+    };
+
+    // Função para salvar a contagem
+    const salvarContagemBebidas = (event) => {
+        event.preventDefault();
+        const responsavel = document.getElementById('responsavel').value;
+        const dataContagem = document.getElementById('dataContagem').value;
+        const bebidas = getBebidas();
+        const detalhesContagem = {};
+
+        bebidas.forEach(bebida => {
+            const depositoInput = document.getElementById(`deposito-${bebida.id}`);
+            const unidadesAvulsasInput = document.getElementById(`unidades-avulsas-${bebida.id}`);
+            const freezerInput = document.getElementById(`freezer-${bebida.id}`);
+
+            const deposito = parseFloat(depositoInput.value) || 0;
+            const unidadesAvulsas = parseFloat(unidadesAvulsasInput?.value) || 0;
+            const freezer = parseFloat(freezerInput.value) || 0;
+            
+            // Calcula o total de unidades
+            const totalUnidades = (deposito * bebida.unidadePorFardo) + unidadesAvulsas + freezer;
+
+            detalhesContagem[bebida.id] = {
+                deposito,
+                unidadesAvulsas,
+                freezer,
+                totalUnidades
+            };
+        });
+
+        const novaContagem = {
+            id: `contagem-bebidas-${Date.now()}`,
+            responsavel,
+            data: dataContagem,
+            detalhesContagem
+        };
+        
+        saveHistoricoContagensBebidas(novaContagem);
+        setUltimaContagemBebidas(novaContagem);
+
+        alert('Contagem salva com sucesso! O relatório será gerado.');
+        formContagemBebidas.reset();
+        gerarRelatorioPDFBebidas(novaContagem, `Relatorio_Contagem_Bebidas`);
+        renderizarListaBebidas(); // Reseta a lista após salvar
+    };
 
     // Lógica para a tela de Estoque de Bebidas (bebidas-estoque.html)
     const tabelaEstoqueBebidasBody = document.getElementById('tabelaEstoqueBebidas');
@@ -425,6 +530,22 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleUnidadesPorFardo();
     }
     
-    // Inicialização principal da aplicação
-    inicializarBebidas();
+    // --- INICIALIZAÇÃO DA PÁGINA ATUAL ---
+    if (document.getElementById('formContagemBebidas')) {
+        // Inicializa a tela de contagem
+        inicializarBebidas();
+        renderizarListaBebidas();
+        formContagemBebidas.addEventListener('submit', salvarContagemBebidas);
+    } else if (document.getElementById('tabelaEstoqueBebidas')) {
+        // Inicializa a tela de estoque
+        renderizarEstoqueBebidas();
+    } else if (document.getElementById('tabelaHistoricoBebidas')) {
+        // Inicializa a tela de histórico
+        renderizarHistoricoBebidas();
+    } else if (document.getElementById('formBebida')) {
+        // Inicializa a tela de gerenciamento
+        inicializarBebidas();
+        renderizarTabelaBebidas();
+        toggleUnidadesPorFardo();
+    }
 });
