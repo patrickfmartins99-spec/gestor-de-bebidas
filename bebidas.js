@@ -36,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('historicoContagensBebidas', JSON.stringify(novoHistorico));
     };
 
-
     // --- FUNÇÕES DE LÓGICA DE NEGÓCIO ---
 
     const calcularGastoEstimado = (estoqueAtual, ultimoEstoque) => {
@@ -54,13 +53,42 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const calcularSugestaoDeCompra = (gastoSemanal) => {
-        return gastoSemanal > 0 ? gastoSemanal * 1.2 : 0;
+        return gastoSemanal > 0 ? Math.ceil(gastoSemanal * 1.2) : 0;
     };
 
     const isDomingo = (data) => {
         const dateObj = new Date(data);
         return dateObj.getDay() === 0; // 0 = Domingo
     };
+    
+    // NOVO: Função para calcular o consumo semanal e a sugestão de compra
+    const calcularEstatisticas = () => {
+        const historico = getHistoricoContagensBebidas();
+        const ultimaContagem = historico[historico.length - 1];
+        const penultimaContagem = historico[historico.length - 2];
+
+        const estatisticas = {};
+
+        if (ultimaContagem && penultimaContagem) {
+            const bebidas = getBebidas();
+            bebidas.forEach(bebida => {
+                const totalUltimo = ultimaContagem.detalhesContagem[bebida.id]?.totalUnidades || 0;
+                const totalPenultimo = penultimaContagem.detalhesContagem[bebida.id]?.totalUnidades || 0;
+                
+                const gasto = calcularGastoEstimado(totalUltimo, totalPenultimo);
+                const reposicao = calcularReposicaoEstimada(totalUltimo, totalPenultimo);
+                const sugestao = calcularSugestaoDeCompra(gasto);
+
+                estatisticas[bebida.id] = {
+                    gasto,
+                    reposicao,
+                    sugestao
+                };
+            });
+        }
+        return estatisticas;
+    };
+
 
     // --- FUNÇÃO PARA INICIALIZAR BEBIDAS ---
     const inicializarBebidas = () => {
@@ -127,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- FUNÇÕES AUXILIARES DE RELATÓRIO ---
+    // --- FUNÇÕES AUXILIARES DE RELATÓRIO (MODIFICADO) ---
     const gerarRelatorioPDFBebidas = (contagem, filenamePrefix) => {
         const bebidas = getBebidas();
         const dadosEmpresa = {
@@ -143,10 +171,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // NOVO: Adiciona as estatísticas ao relatório
+        const estatisticas = calcularEstatisticas();
+        
         let tabelaRows = '';
         Object.keys(contagem.detalhesContagem).forEach(bebidaId => {
             const bebidaInfo = bebidas.find(b => b.id === bebidaId) || { nome: 'Desconhecida', unidade: 'N/A', unidadePorFardo: 1 };
             const dados = contagem.detalhesContagem[bebidaId];
+            const stats = estatisticas[bebidaId] || {};
             
             let depositoTexto = '';
             if (bebidaInfo.unidade === 'caixa' || bebidaInfo.unidade === 'fardo') {
@@ -161,6 +193,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td style="padding: 10px; border: 1px solid #000; text-align: center;">${depositoTexto}</td>
                     <td style="padding: 10px; border: 1px solid #000; text-align: center;">${dados.freezer}</td>
                     <td style="padding: 10px; border: 1px solid #000; text-align: center;">${dados.totalUnidades}</td>
+                    <td style="padding: 10px; border: 1px solid #000; text-align: center;">${stats.gasto !== undefined ? stats.gasto : 'N/A'}</td>
+                    <td style="padding: 10px; border: 1px solid #000; text-align: center;">${stats.reposicao !== undefined ? stats.reposicao : 'N/A'}</td>
+                    <td style="padding: 10px; border: 1px solid #000; text-align: center;">${stats.sugestao !== undefined ? stats.sugestao : 'N/A'}</td>
                 </tr>
             `;
         });
@@ -185,6 +220,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             <th style="padding: 12px; border: 1px solid #000; text-align: center;">DEPÓSITO</th>
                             <th style="padding: 12px; border: 1px solid #000; text-align: center;">FREEZER (UNIDADES)</th>
                             <th style="padding: 12px; border: 1px solid #000; text-align: center;">TOTAL EM ESTOQUE (UNIDADES)</th>
+                            <th style="padding: 12px; border: 1px solid #000; text-align: center;">CONSUMO (UNIDADES)</th>
+                            <th style="padding: 12px; border: 1px solid #000; text-align: center;">REPOSIÇÃO (UNIDADES)</th>
+                            <th style="padding: 12px; border: 1px solid #000; text-align: center;">SUGESTÃO DE COMPRA (UNIDADES)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -203,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
             filename: `${filenamePrefix}_${contagem.data}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true, logging: true },
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' } // MODIFICADO: Muda para orientação paisagem para caber mais colunas
         };
 
         html2pdf().set(options).from(conteudoRelatorio).save();
