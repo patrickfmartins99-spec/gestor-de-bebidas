@@ -127,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+
     // --- FUNÇÕES AUXILIARES DE RELATÓRIO ---
     const gerarRelatorioPDFBebidas = (contagem, filenamePrefix) => {
         const bebidas = getBebidas();
