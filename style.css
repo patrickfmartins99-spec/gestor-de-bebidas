@@ -1,41 +1,54 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #f8f9fa; /* Adicionado para consistência */
+    background-color: #f8f9fa;
 }
 
 .card {
     border: none;
     border-radius: 1rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-5px);
 }
 
 .insumo-item, .bebida-item {
-    background-color: #ffffff; /* Fundo branco para se destacar no body cinza */
+    background-color: #f8f9fa;
     border-radius: 0.5rem;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: all 0.3s ease;
+}
+
+.insumo-item:hover, .bebida-item:hover {
+    background-color: #e9ecef;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
 }
 
 .insumo-nome, .bebida-nome {
     font-weight: 600;
-    color: #343a40; /* Cor mais escura para melhor legibilidade */
+    color: #495057;
 }
 
 .form-label {
     font-size: 0.875rem;
     color: #6c757d;
+    font-weight: 500;
 }
 
 /* Estilo para o resultado do cálculo */
 .insumo-item [data-campo="sobrou"], .bebida-item [data-campo="total-unidades"] {
     color: #28a745;
     font-size: 1.5rem;
-    font-weight: bold; /* Adicionado para destaque */
+    font-weight: bold;
 }
 
 /* Estilo para a posição final */
 .insumo-item [data-campo="posicaoFinal"] {
     color: #007bff;
     font-size: 1.5rem;
-    font-weight: bold; /* Adicionado para destaque */
+    font-weight: bold;
 }
 
 /* Estilo para os botões de navegação */
@@ -43,32 +56,176 @@ body {
     font-size: 1.25rem;
 }
 
-/* --- Estilos para os PDFs (Melhorados) --- */
+/* Estilos para validação de formulários */
+.is-invalid {
+    border-color: #dc3545 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.invalid-feedback {
+    display: none;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875em;
+    color: #dc3545;
+}
+
+.is-invalid ~ .invalid-feedback {
+    display: block;
+}
+
+/* Estilos para notificações */
+.app-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    min-width: 300px;
+    max-width: 90%;
+    animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Melhorias para mobile */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    .card {
+        margin-bottom: 1rem;
+        padding: 1rem;
+    }
+    
+    .btn-lg {
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    h1 {
+        font-size: 1.75rem;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+}
+
+/* Melhorar visualização das tabelas em mobile */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive table {
+    min-width: 600px;
+}
+
+/* Estilos para os inputs de contagem */
+.bebida-item input[type="number"] {
+    text-align: center;
+    font-weight: 500;
+}
+
+.bebida-item input[type="number"]:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Estilos para os badges */
+.badge {
+    font-size: 0.85em;
+    padding: 0.35em 0.65em;
+}
+
+/* Melhorias para navegação */
+.navbar-brand {
+    padding-left: 1rem;
+    font-size: 1.25rem;
+}
+
+.nav-link {
+    transition: all 0.3s ease;
+    border-radius: 0.25rem;
+    margin: 0 0.25rem;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 992px) {
+    .navbar-brand {
+        padding-left: 0;
+    }
+    
+    .nav-link {
+        margin: 0;
+        border-radius: 0;
+    }
+}
+
+/* Estilos de loading */
+.loading-spinner {
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 0.5rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* --- Estilos para os PDFs --- */
 .relatorio-container {
-    font-family: 'Helvetica Neue', Arial, sans-serif; /* Fonte mais moderna */
+    font-family: Arial, sans-serif;
     padding: 2rem;
     color: #333;
-    background-color: #fff; /* Fundo do relatório branco */
 }
 
 .relatorio-cabecalho {
     text-align: center;
     margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 3px solid #343a40; /* Divisor mais robusto */
 }
 
 .relatorio-titulo {
     margin: 0;
-    font-size: 28px; /* Tamanho maior */
+    font-size: 24px;
     font-weight: bold;
-    color: #343a40;
-    text-transform: uppercase; /* Deixa o texto em caixa alta */
+    color: #495057;
 }
 
 .relatorio-subtitulo {
-    margin: 5px 0 0 0;
-    font-size: 18px;
+    margin: 5px 0;
+    font-size: 16px;
     color: #6c757d;
 }
 
@@ -79,7 +236,9 @@ body {
 }
 
 .relatorio-divisoria {
-    display: none; /* Removido para usar o border-bottom do cabeçalho */
+    border: 0;
+    border-top: 1px solid #dee2e6;
+    margin-top: 1rem;
 }
 
 .relatorio-info {
@@ -95,10 +254,10 @@ body {
 }
 
 .relatorio-tabela th, .relatorio-tabela td {
-    padding: 10px; /* Mais espaçamento interno */
+    padding: 8px;
     border: 1px solid #dee2e6;
     text-align: left;
-    font-size: 13px; /* Fonte um pouco maior */
+    font-size: 12px;
 }
 
 .relatorio-tabela thead {
@@ -113,13 +272,26 @@ body {
     color: #6c757d;
 }
 
-/* Estilos para a navegação do topo */
-.navbar-brand {
-    padding-left: 1rem;
+/* Animações para transições suaves */
+.fade-in {
+    animation: fadeIn 0.5s ease;
 }
 
-@media (max-width: 992px) {
-    .navbar-brand {
-        padding-left: 0;
-    }
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Melhorias para os botões */
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+/* Estilos para os ícones */
+.bi {
+    vertical-align: -0.125em;
 }
