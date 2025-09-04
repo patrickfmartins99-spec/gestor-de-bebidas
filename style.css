@@ -1,5 +1,6 @@
 body {
     font-family: Arial, sans-serif;
+    background-color: #f8f9fa; /* Adicionado para consistência */
 }
 
 .card {
@@ -8,14 +9,14 @@ body {
 }
 
 .insumo-item, .bebida-item {
-    background-color: #f8f9fa;
+    background-color: #ffffff; /* Fundo branco para se destacar no body cinza */
     border-radius: 0.5rem;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
 
 .insumo-nome, .bebida-nome {
     font-weight: 600;
-    color: #495057;
+    color: #343a40; /* Cor mais escura para melhor legibilidade */
 }
 
 .form-label {
@@ -27,12 +28,14 @@ body {
 .insumo-item [data-campo="sobrou"], .bebida-item [data-campo="total-unidades"] {
     color: #28a745;
     font-size: 1.5rem;
+    font-weight: bold; /* Adicionado para destaque */
 }
 
 /* Estilo para a posição final */
 .insumo-item [data-campo="posicaoFinal"] {
     color: #007bff;
     font-size: 1.5rem;
+    font-weight: bold; /* Adicionado para destaque */
 }
 
 /* Estilo para os botões de navegação */
@@ -40,28 +43,32 @@ body {
     font-size: 1.25rem;
 }
 
-/* --- Estilos para os PDFs --- */
+/* --- Estilos para os PDFs (Melhorados) --- */
 .relatorio-container {
-    font-family: Arial, sans-serif;
+    font-family: 'Helvetica Neue', Arial, sans-serif; /* Fonte mais moderna */
     padding: 2rem;
     color: #333;
+    background-color: #fff; /* Fundo do relatório branco */
 }
 
 .relatorio-cabecalho {
     text-align: center;
     margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 3px solid #343a40; /* Divisor mais robusto */
 }
 
 .relatorio-titulo {
     margin: 0;
-    font-size: 24px;
+    font-size: 28px; /* Tamanho maior */
     font-weight: bold;
-    color: #495057;
+    color: #343a40;
+    text-transform: uppercase; /* Deixa o texto em caixa alta */
 }
 
 .relatorio-subtitulo {
-    margin: 5px 0;
-    font-size: 16px;
+    margin: 5px 0 0 0;
+    font-size: 18px;
     color: #6c757d;
 }
 
@@ -72,9 +79,7 @@ body {
 }
 
 .relatorio-divisoria {
-    border: 0;
-    border-top: 1px solid #dee2e6;
-    margin-top: 1rem;
+    display: none; /* Removido para usar o border-bottom do cabeçalho */
 }
 
 .relatorio-info {
@@ -90,10 +95,10 @@ body {
 }
 
 .relatorio-tabela th, .relatorio-tabela td {
-    padding: 8px;
+    padding: 10px; /* Mais espaçamento interno */
     border: 1px solid #dee2e6;
     text-align: left;
-    font-size: 12px;
+    font-size: 13px; /* Fonte um pouco maior */
 }
 
 .relatorio-tabela thead {
