@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contagem de Bebidas</title>
+    <title>Contagem de Bebidas - La Giovana's Pizzaria</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="style.css">
@@ -20,16 +20,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="index.html" aria-label="Contagem"><i class="bi bi-house me-2"></i>Contagem</a>
+                        <a class="nav-link active" aria-current="page" href="index.html"><i class="bi bi-house me-2"></i>Contagem</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="bebidas-estoque.html" aria-label="Estoque"><i class="bi bi-box me-2"></i>Estoque</a>
+                        <a class="nav-link" href="bebidas-estoque.html"><i class="bi bi-box me-2"></i>Estoque</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="bebidas-historico.html" aria-label="Histórico"><i class="bi bi-clock-history me-2"></i>Histórico</a>
+                        <a class="nav-link" href="bebidas-historico.html"><i class="bi bi-clock-history me-2"></i>Histórico</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="bebidas-gerenciar.html" aria-label="Gerenciar"><i class="bi bi-gear me-2"></i>Gerenciar</a>
+                        <a class="nav-link" href="bebidas-gerenciar.html"><i class="bi bi-gear me-2"></i>Gerenciar</a>
                     </li>
                 </ul>
             </div>
@@ -37,30 +37,53 @@
     </nav>
 
     <div class="container my-5">
-        <h1 class="text-center mb-4">Contagem de Bebidas</h1>
+        <header class="text-center mb-4">
+            <h1 class="mb-3">Contagem de Bebidas</h1>
+            <p class="lead text-muted">Registre a contagem atual do estoque de bebidas</p>
+        </header>
 
-        <div class="card p-4 shadow-sm mb-4">
-            <h2 class="card-title text-center mb-4">Nova Contagem</h2>
-            <form id="formContagemBebidas">
-                <div class="mb-3">
-                    <label for="responsavel" class="form-label">Responsável pela Contagem</label>
-                    <input type="text" class="form-control" id="responsavel" required>
-                </div>
-                <div class="mb-3">
-                    <label for="dataContagem" class="form-label">Data da Contagem</label>
-                    <input type="date" class="form-control" id="dataContagem" required>
-                </div>
-
-                <div id="listaBebidas" class="mb-4">
+        <main>
+            <div class="card p-4 shadow-sm mb-4">
+                <h2 class="card-title text-center mb-4">Nova Contagem</h2>
+                <form id="formContagemBebidas">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="responsavel" class="form-label">Responsável pela Contagem <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="responsavel" required aria-describedby="responsavelHelp">
+                            <div id="responsavelHelp" class="form-text">Nome da pessoa responsável pela contagem</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="dataContagem" class="form-label">Data da Contagem <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="dataContagem" required aria-describedby="dataContagemHelp">
+                            <div id="dataContagemHelp" class="form-text">Data em que a contagem está sendo realizada</div>
+                        </div>
                     </div>
 
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-success btn-lg">
-                        <i class="bi bi-save me-2"></i>Salvar e Gerar Relatório
-                    </button>
-                </div>
-            </form>
-        </div>
+                    <div class="mt-4">
+                        <h3 class="h5 mb-3">Itens para Contagem</h3>
+                        <div id="listaBebidas" class="mb-4">
+                            <!-- As bebidas serão carregadas dinamicamente via JavaScript -->
+                        </div>
+                        
+                        <div id="loadingBebidas" class="text-center py-4">
+                            <div class="loading-spinner"></div>
+                            <p class="mt-2 text-muted">Carregando bebidas...</p>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-success btn-lg" id="btnSalvarContagem">
+                            <i class="bi bi-save me-2"></i>Salvar e Gerar Relatório
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Área para notificações -->
+    <div aria-live="polite" aria-atomic="true" class="position-relative">
+        <div class="toast-container p-3 top-0 end-0" id="toastContainer"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
