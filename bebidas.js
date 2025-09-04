@@ -205,7 +205,7 @@ const calcularEstatisticas = () => {
   return estatisticas;
 };
 
-// --- FUNÇÕES AUXILIARES DE RELATÓRIO ---
+// --- FUNÇÕES AUXILIARES DE RELATÓRIO (MODIFICADO) ---
 const gerarRelatorioPDFBebidas = (contagem, filenamePrefix) => {
     const bebidas = AppState.getBebidas();
     const dadosEmpresa = {
@@ -410,10 +410,14 @@ const gerarRelatorioPDFBebidas = (contagem, filenamePrefix) => {
 const setupContagemPage = () => {
   const formContagemBebidas = document.getElementById('formContagemBebidas');
   const listaBebidasContainer = document.getElementById('listaBebidas');
+  const loadingBebidas = document.getElementById('loadingBebidas');
 
   // Função para renderizar a lista de bebidas no formulário de contagem
   const renderizarListaBebidas = () => {
     const bebidas = AppState.getBebidas();
+    
+    // Esconder loading e mostrar conteúdo
+    if (loadingBebidas) loadingBebidas.style.display = 'none';
     
     // Usar documentFragment para melhor performance
     const fragment = document.createDocumentFragment();
@@ -596,10 +600,15 @@ const setupEstoquePage = () => {
   const tabelaEstoqueBebidasBody = document.getElementById('tabelaEstoqueBebidas');
   const btnGerarPdfEstoqueBebidas = document.getElementById('btnGerarPdfEstoqueBebidas');
   const semEstoqueBebidasText = document.getElementById('semEstoqueBebidas');
+  const loadingEstoque = document.getElementById('loadingEstoque');
+  const infoUltimaContagem = document.getElementById('infoUltimaContagem');
 
   const renderizarEstoqueBebidas = () => {
     const ultimaContagem = AppState.getUltimaContagemBebidas();
     const bebidas = AppState.getBebidas();
+    
+    // Esconder loading
+    if (loadingEstoque) loadingEstoque.style.display = 'none';
     
     // Usar documentFragment para melhor performance
     const fragment = document.createDocumentFragment();
@@ -609,6 +618,12 @@ const setupEstoquePage = () => {
       return;
     }
     semEstoqueBebidasText.style.display = 'none';
+
+    // Atualizar informação da última contagem
+    if (infoUltimaContagem) {
+      const dataFormatada = new Date(ultimaContagem.data + 'T00:00:00').toLocaleDateString('pt-BR');
+      infoUltimaContagem.textContent = `Última contagem: ${dataFormatada} por ${ultimaContagem.responsavel}`;
+    }
 
     bebidas.forEach(bebida => {
       const totalUnidades = ultimaContagem.detalhesContagem[bebida.id]?.totalUnidades || 0;
@@ -645,24 +660,63 @@ const setupEstoquePage = () => {
 const setupHistoricoPage = () => {
   const tabelaHistoricoBebidasBody = document.getElementById('tabelaHistoricoBebidas');
   const semHistoricoBebidasText = document.getElementById('semHistoricoBebidas');
+  const loadingHistorico = document.getElementById('loadingHistorico');
+  const totalContagens = document.getElementById('totalContagens');
+  const buscaHistorico = document.getElementById('buscaHistorico');
+  const filtroData = document.getElementById('filtroData');
+  const limparFiltroData = document.getElementById('limparFiltroData');
+  const semResultadosBusca = document.getElementById('semResultadosBusca');
+
+  let contagemAtualParaExclusao = null;
 
   const renderizarHistoricoBebidas = () => {
-    const historico = AppState.getHistoricoContagensBebidas().reverse();
+    let historico = AppState.getHistoricoContagensBebidas().reverse();
+    
+    // Esconder loading
+    if (loadingHistorico) loadingHistorico.style.display = 'none';
+    
+    // Aplicar filtros
+    const termoBusca = buscaHistorico ? buscaHistorico.value.toLowerCase() : '';
+    const dataFiltro = filtroData ? filtroData.value : '';
+    
+    if (termoBusca || dataFiltro) {
+      historico = historico.filter(contagem => {
+        const matchBusca = termoBusca ? contagem.responsavel.toLowerCase().includes(termoBusca) : true;
+        const matchData = dataFiltro ? contagem.data === dataFiltro : true;
+        return matchBusca && matchData;
+      });
+    }
+    
+    // Atualizar contador
+    if (totalContagens) {
+      totalContagens.textContent = historico.length;
+    }
     
     // Usar documentFragment para melhor performance
     const fragment = document.createDocumentFragment();
     
     if (historico.length === 0) {
-      semHistoricoBebidasText.style.display = 'block';
+      if (termoBusca || dataFiltro) {
+        semResultadosBusca.style.display = 'block';
+        semHistoricoBebidasText.style.display = 'none';
+      } else {
+        semHistoricoBebidasText.style.display = 'block';
+        semResultadosBusca.style.display = 'none';
+      }
+      tabelaHistoricoBebidasBody.innerHTML = '';
       return;
     }
+    
     semHistoricoBebidasText.style.display = 'none';
+    semResultadosBusca.style.display = 'none';
 
     historico.forEach(contagem => {
+      const dataFormatada = new Date(contagem.data + 'T00:00:00').toLocaleDateString('pt-BR');
+      
       const tr = document.createElement('tr');
       tr.classList.add('fade-in');
       tr.innerHTML = `
-        <td>${contagem.data}</td>
+        <td>${dataFormatada}</td>
         <td>${contagem.responsavel}</td>
         <td class="text-end">
           <button class="btn btn-sm btn-danger btn-excluir-historico" data-id="${contagem.id}"><i class="bi bi-trash"></i></button>
@@ -689,14 +743,41 @@ const setupHistoricoPage = () => {
     document.querySelectorAll('.btn-excluir-historico').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const contagemId = e.currentTarget.dataset.id;
-        if (confirm('Tem certeza que deseja excluir esta contagem?')) {
-          AppState.deleteContagemBebidas(contagemId);
-          showNotification('Contagem excluída com sucesso.', 'success');
-          renderizarHistoricoBebidas();
+        const contagem = AppState.getHistoricoContagensBebidas().find(c => c.id === contagemId);
+        if (contagem) {
+          contagemAtualParaExclusao = contagemId;
+          document.getElementById('nomeBebidaExclusao').textContent = `de ${contagem.data} por ${contagem.responsavel}`;
+          new bootstrap.Modal(document.getElementById('modalConfirmacaoExclusao')).show();
         }
       });
     });
   };
+
+  // Configurar filtros
+  if (buscaHistorico) {
+    buscaHistorico.addEventListener('input', renderizarHistoricoBebidas);
+  }
+  
+  if (filtroData) {
+    filtroData.addEventListener('change', renderizarHistoricoBebidas);
+  }
+  
+  if (limparFiltroData) {
+    limparFiltroData.addEventListener('click', () => {
+      filtroData.value = '';
+      renderizarHistoricoBebidas();
+    });
+  }
+
+  // Configurar modal de confirmação
+  document.getElementById('btnConfirmarExclusao').addEventListener('click', () => {
+    if (contagemAtualParaExclusao) {
+      AppState.deleteContagemBebidas(contagemAtualParaExclusao);
+      showNotification('Contagem excluída com sucesso.', 'success');
+      renderizarHistoricoBebidas();
+      bootstrap.Modal.getInstance(document.getElementById('modalConfirmacaoExclusao')).hide();
+    }
+  });
   
   renderizarHistoricoBebidas();
 };
@@ -713,6 +794,17 @@ const setupGerenciamentoPage = () => {
   const tabelaBebidasBody = document.getElementById('tabelaBebidas');
   const semBebidasText = document.getElementById('semBebidas');
   const btnCancelarEdicao = document.getElementById('btnCancelarEdicao');
+  const loadingBebidas = document.getElementById('loadingBebidas');
+  const totalBebidas = document.getElementById('totalBebidas');
+  const buscaBebidas = document.getElementById('buscaBebidas');
+  const filtroCategoria = document.getElementById('filtroCategoria');
+  const limparBusca = document.getElementById('limparBusca');
+  const semResultadosBusca = document.getElementById('semResultadosBusca');
+  const btnExportarDados = document.getElementById('btnExportarDados');
+  const importFile = document.getElementById('importFile');
+  const btnLimparTudo = document.getElementById('btnLimparTudo');
+
+  let bebidaAtualParaExclusao = null;
 
   // Lógica para mostrar/esconder o campo de "quantidade por fardo"
   const toggleUnidadesPorFardo = () => {
@@ -744,16 +836,47 @@ const setupGerenciamentoPage = () => {
   };
 
   const renderizarTabelaBebidas = () => {
-    const bebidas = AppState.getBebidas();
+    let bebidas = AppState.getBebidas();
+    
+    // Esconder loading
+    if (loadingBebidas) loadingBebidas.style.display = 'none';
+    
+    // Aplicar filtros
+    const termoBusca = buscaBebidas ? buscaBebidas.value.toLowerCase() : '';
+    const categoriaFiltro = filtroCategoria ? filtroCategoria.value : '';
+    
+    if (termoBusca || categoriaFiltro) {
+      bebidas = bebidas.filter(bebida => {
+        const matchBusca = termoBusca ? 
+          bebida.nome.toLowerCase().includes(termoBusca) || 
+          bebida.categoria.toLowerCase().includes(termoBusca) : true;
+        const matchCategoria = categoriaFiltro ? bebida.categoria === categoriaFiltro : true;
+        return matchBusca && matchCategoria;
+      });
+    }
+    
+    // Atualizar contador
+    if (totalBebidas) {
+      totalBebidas.textContent = bebidas.length;
+    }
     
     // Usar documentFragment para melhor performance
     const fragment = document.createDocumentFragment();
     
     if (bebidas.length === 0) {
-      semBebidasText.style.display = 'block';
+      if (termoBusca || categoriaFiltro) {
+        semResultadosBusca.style.display = 'block';
+        semBebidasText.style.display = 'none';
+      } else {
+        semBebidasText.style.display = 'block';
+        semResultadosBusca.style.display = 'none';
+      }
+      tabelaBebidasBody.innerHTML = '';
       return;
     }
+    
     semBebidasText.style.display = 'none';
+    semResultadosBusca.style.display = 'none';
     
     bebidas.forEach(bebida => {
       const tr = createBebidaRow(bebida);
@@ -769,7 +892,15 @@ const setupGerenciamentoPage = () => {
     });
     
     document.querySelectorAll('.btn-excluir').forEach(btn => {
-      btn.addEventListener('click', (e) => excluirBebida(e.currentTarget.dataset.id));
+      btn.addEventListener('click', (e) => {
+        const bebidaId = e.currentTarget.dataset.id;
+        const bebida = AppState.getBebidas().find(b => b.id === bebidaId);
+        if (bebida) {
+          bebidaAtualParaExclusao = bebidaId;
+          document.getElementById('nomeBebidaExclusao').textContent = bebida.nome;
+          new bootstrap.Modal(document.getElementById('modalConfirmacaoExclusao')).show();
+        }
+      });
     });
   };
 
@@ -842,12 +973,13 @@ const setupGerenciamentoPage = () => {
     }
   };
 
-  const excluirBebida = (id) => {
-    if (confirm('Tem certeza que deseja excluir esta bebida?')) {
-      let bebidas = AppState.getBebidas().filter(bebida => bebida.id !== id);
+  const excluirBebida = () => {
+    if (bebidaAtualParaExclusao) {
+      let bebidas = AppState.getBebidas().filter(bebida => bebida.id !== bebidaAtualParaExclusao);
       AppState.saveBebidas(bebidas);
       showNotification('Bebida excluída com sucesso.', 'success');
       renderizarTabelaBebidas();
+      bootstrap.Modal.getInstance(document.getElementById('modalConfirmacaoExclusao')).hide();
     }
   };
 
@@ -856,6 +988,68 @@ const setupGerenciamentoPage = () => {
     bebidaIdInput.value = '';
     toggleUnidadesPorFardo();
     btnCancelarEdicao.style.display = 'none';
+  };
+
+  // Funções de backup e restore
+  const exportData = () => {
+    const data = {
+      bebidas: AppState.getBebidas(),
+      historicoContagens: AppState.getHistoricoContagensBebidas(),
+      ultimaContagem: AppState.getUltimaContagemBebidas(),
+      exportDate: new Date().toISOString()
+    };
+    
+    const dataStr = JSON.stringify(data);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `backup-estoque-bebidas-${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    
+    showNotification('Backup exportado com sucesso!', 'success');
+  };
+
+  const importData = (file) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = JSON.parse(e.target.result);
+        
+        if (confirm('Isso substituirá todos os dados atuais. Continuar?')) {
+          localStorage.setItem('bebidas', JSON.stringify(data.bebidas || []));
+          localStorage.setItem('historicoContagensBebidas', JSON.stringify(data.historicoContagens || []));
+          localStorage.setItem('ultimaContagemBebidas', JSON.stringify(data.ultimaContagem || null));
+          
+          // Recarregar o estado
+          AppState.init();
+          showNotification('Dados importados com sucesso!', 'success');
+          
+          // Recarregar a tabela
+          renderizarTabelaBebidas();
+        }
+      } catch (error) {
+        showNotification('Erro ao importar arquivo: formato inválido', 'danger');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const limparTodosDados = () => {
+    localStorage.removeItem('bebidas');
+    localStorage.removeItem('historicoContagensBebidas');
+    localStorage.removeItem('ultimaContagemBebidas');
+    
+    // Recarregar o estado
+    AppState.init();
+    showNotification('Todos os dados foram limpos. Reiniciando com bebidas padrão.', 'info');
+    
+    // Recarregar a tabela
+    renderizarTabelaBebidas();
+    
+    bootstrap.Modal.getInstance(document.getElementById('modalConfirmacaoLimpeza')).hide();
   };
 
   // Configurar event listeners
@@ -870,6 +1064,48 @@ const setupGerenciamentoPage = () => {
   if (btnCancelarEdicao) {
     btnCancelarEdicao.addEventListener('click', cancelarEdicao);
   }
+
+  // Configurar filtros
+  if (buscaBebidas) {
+    buscaBebidas.addEventListener('input', renderizarTabelaBebidas);
+  }
+  
+  if (filtroCategoria) {
+    filtroCategoria.addEventListener('change', renderizarTabelaBebidas);
+  }
+  
+  if (limparBusca) {
+    limparBusca.addEventListener('click', () => {
+      buscaBebidas.value = '';
+      filtroCategoria.value = '';
+      renderizarTabelaBebidas();
+    });
+  }
+
+  // Configurar backup/restore
+  if (btnExportarDados) {
+    btnExportarDados.addEventListener('click', exportData);
+  }
+  
+  if (importFile) {
+    importFile.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        importData(e.target.files[0]);
+        e.target.value = ''; // Resetar o input
+      }
+    });
+  }
+
+  // Configurar limpeza de dados
+  if (btnLimparTudo) {
+    btnLimparTudo.addEventListener('click', () => {
+      new bootstrap.Modal(document.getElementById('modalConfirmacaoLimpeza')).show();
+    });
+  }
+
+  // Configurar modais de confirmação
+  document.getElementById('btnConfirmarExclusao').addEventListener('click', excluirBebida);
+  document.getElementById('btnConfirmarLimpeza').addEventListener('click', limparTodosDados);
   
   // Inicializar a tela
   renderizarTabelaBebidas();
