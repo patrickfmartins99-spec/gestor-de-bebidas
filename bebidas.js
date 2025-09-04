@@ -58,17 +58,19 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const isDomingo = (dataString) => {
-        const dateObj = new Date(dataString.replace(/-/g, '/')); // Corrige o formato da data para compatibilidade
-        return dateObj.getDay() === 0; // 0 = Domingo
+        const dateObj = new Date(dataString.replace(/-/g, '/'));
+        return dateObj.getDay() === 0;
     };
     
     const calcularEstatisticas = () => {
         const historico = getHistoricoContagensBebidas();
+        // Acessa as duas últimas contagens (se existirem)
         const ultimaContagem = historico[historico.length - 1];
         const penultimaContagem = historico[historico.length - 2];
 
         const estatisticas = {};
 
+        // Adiciona uma verificação para garantir que há dados suficientes para o cálculo
         if (ultimaContagem && penultimaContagem) {
             const bebidas = getBebidas();
             bebidas.forEach(bebida => {
@@ -89,18 +91,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return estatisticas;
     };
 
-
     // --- FUNÇÃO PARA INICIALIZAR BEBIDAS ---
     const inicializarBebidas = () => {
         const bebidasExistentes = getBebidas();
         if (bebidasExistentes.length === 0) {
             const bebidasPadrao = [
-                // Ordem: Fruki, Refrigerantes, Águas, Cervejas 600ml, Long Necks, Vinhos e Espumantes, Destilados
-                
-                // Refrigerantes Pet (Fardos de 6)
                 { id: 'bebida-fruki', nome: 'Fruki 1,5L', unidade: 'fardo', unidadePorFardo: 6, categoria: 'Refrigerantes Pet' },
-
-                // Refrigerantes Lata (Fardos de 12)
                 { id: 'bebida-cocacola', nome: 'Coca-Cola Lata', unidade: 'fardo', unidadePorFardo: 12, categoria: 'Refrigerantes Lata' },
                 { id: 'bebida-cocacolazero', nome: 'Coca-Cola Zero Lata', unidade: 'fardo', unidadePorFardo: 12, categoria: 'Refrigerantes Lata' },
                 { id: 'bebida-pepsi', nome: 'Pepsi Lata', unidade: 'fardo', unidadePorFardo: 12, categoria: 'Refrigerantes Lata' },
@@ -111,23 +107,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 { id: 'bebida-sukita', nome: 'Sukita Laranja', unidade: 'fardo', unidadePorFardo: 12, categoria: 'Refrigerantes Lata' },
                 { id: 'bebida-h2o', nome: 'H2O Limão', unidade: 'fardo', unidadePorFardo: 12, categoria: 'Refrigerantes Lata' },
                 { id: 'bebida-aguatonica', nome: 'Água Tônica', unidade: 'fardo', unidadePorFardo: 12, categoria: 'Refrigerantes Lata' },
-
-                // Águas (Fardos de 12)
                 { id: 'bebida-aguacomgas', nome: 'Água com Gás 500ml', unidade: 'fardo', unidadePorFardo: 12, categoria: 'Águas' },
                 { id: 'bebida-aguasemgas', nome: 'Água sem Gás 500ml', unidade: 'fardo', unidadePorFardo: 12, categoria: 'Águas' },
-                
-                // Cervejas 600ml (Caixas de 24)
                 { id: 'bebida-bud600', nome: 'Budweiser 600ml', unidade: 'caixa', unidadePorFardo: 24, categoria: 'Cervejas 600ml' },
                 { id: 'bebida-orig600', nome: 'Original 600ml', unidade: 'caixa', unidadePorFardo: 24, categoria: 'Cervejas 600ml' },
                 { id: 'bebida-heineken600', nome: 'Heineken 600ml', unidade: 'caixa', unidadePorFardo: 24, categoria: 'Cervejas 600ml' },
-                
-                // Cervejas Long Neck (Fardos de 6)
                 { id: 'bebida-stella', nome: 'Stella Artois', unidade: 'fardo', unidadePorFardo: 6, categoria: 'Cervejas Long Neck' },
                 { id: 'bebida-budlong', nome: 'Budweiser Long Neck', unidade: 'fardo', unidadePorFardo: 6, categoria: 'Cervejas Long Neck' },
                 { id: 'bebida-heinekenzero', nome: 'Heineken Zero Álcool', unidade: 'fardo', unidadePorFardo: 6, categoria: 'Cervejas Long Neck' },
                 { id: 'bebida-heinekenlong', nome: 'Heineken', unidade: 'fardo', unidadePorFardo: 6, categoria: 'Cervejas Long Neck' },
-                
-                // Vinhos e Espumantes (Unidades)
                 { id: 'bebida-brut', nome: 'Brut', unidade: 'unidade', unidadePorFardo: 1, categoria: 'Espumantes e Vinhos' },
                 { id: 'bebida-demiseco', nome: 'Brut Demiseco', unidade: 'unidade', unidadePorFardo: 1, categoria: 'Espumantes e Vinhos' },
                 { id: 'bebida-rose', nome: 'Brut Rosé', unidade: 'unidade', unidadePorFardo: 1, categoria: 'Espumantes e Vinhos' },
@@ -140,8 +128,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 { id: 'bebida-branco-suave', nome: 'Vinho Branco Suave', unidade: 'unidade', unidadePorFardo: 1, categoria: 'Espumantes e Vinhos' },
                 { id: 'bebida-tinto-suave', nome: 'Vinho Tinto Suave (Garrafão)', unidade: 'unidade', unidadePorFardo: 1, categoria: 'Espumantes e Vinhos' },
                 { id: 'bebida-tinto-seco', nome: 'Vinho Tinto Seco (Garrafão)', unidade: 'unidade', unidadePorFardo: 1, categoria: 'Espumantes e Vinhos' },
-
-                // Destilados (Unidades)
                 { id: 'bebida-baly', nome: 'Energético Baly', unidade: 'unidade', unidadePorFardo: 1, categoria: 'Destilados' },
                 { id: 'bebida-bacardi', nome: 'Bacardi', unidade: 'unidade', unidadePorFardo: 1, categoria: 'Destilados' },
                 { id: 'bebida-vodka', nome: 'Vodka', unidade: 'unidade', unidadePorFardo: 1, categoria: 'Destilados' },
@@ -291,8 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Função para renderizar a lista de bebidas no formulário de contagem
     const renderizarListaBebidas = () => {
         const bebidas = getBebidas();
-        listaBebidasContainer.innerHTML = ''; // Limpa o container antes de renderizar
-
+        listaBebidasContainer.innerHTML = '';
         if (bebidas.length === 0) {
             listaBebidasContainer.innerHTML = `<p class="text-center text-muted">Nenhuma bebida cadastrada. Vá para a tela "Gerenciar" para adicionar novas bebidas.</p>`;
             return;
@@ -308,7 +293,6 @@ document.addEventListener('DOMContentLoaded', () => {
             bebidaNome.textContent = bebida.nome;
             bebidaItem.appendChild(bebidaNome);
 
-            // Campos para contagem
             const formRow = document.createElement('div');
             formRow.classList.add('row', 'g-3');
 
@@ -341,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             formRow.appendChild(freezerCol);
             
-            // NOVO: Exibição do total em tempo real
+            // Exibição do total em tempo real
             const totalCol = document.createElement('div');
             totalCol.classList.add('col-12', 'mt-3');
             totalCol.innerHTML = `
@@ -352,12 +336,16 @@ document.addEventListener('DOMContentLoaded', () => {
             bebidaItem.appendChild(formRow);
             listaBebidasContainer.appendChild(bebidaItem);
         });
-        
-        // Adiciona os event listeners para o cálculo em tempo real
+    };
+
+    // Função para calcular o total em tempo real e atualizar a exibição
+    const setupRealTimeCalculation = () => {
         document.querySelectorAll('input[type="number"]').forEach(input => {
-            input.addEventListener('input', () => {
-                const bebidaId = input.dataset.id;
+            input.addEventListener('input', (e) => {
+                const bebidaId = e.currentTarget.dataset.id;
                 const bebida = getBebidas().find(b => b.id === bebidaId);
+                
+                if (!bebida) return;
                 
                 const depositoInput = document.getElementById(`deposito-${bebidaId}`);
                 const unidadesAvulsasInput = document.getElementById(`unidades-avulsas-${bebidaId}`);
@@ -368,8 +356,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const unidadesAvulsas = parseFloat(unidadesAvulsasInput?.value) || 0;
                 const freezer = parseFloat(freezerInput.value) || 0;
                 
-                const totalUnidades = (deposito * (bebida?.unidadePorFardo || 1)) + unidadesAvulsas + freezer;
+                // Validação de input para garantir valores não-negativos
+                if (deposito < 0 || unidadesAvulsas < 0 || freezer < 0) {
+                    alert('Os valores de contagem não podem ser negativos.');
+                    e.currentTarget.value = 0; // Reseta o valor para 0
+                    return;
+                }
                 
+                const totalUnidades = (deposito * (bebida.unidadePorFardo || 1)) + unidadesAvulsas + freezer;
                 totalSpan.textContent = totalUnidades;
             });
         });
@@ -378,10 +372,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Função para salvar a contagem
     const salvarContagemBebidas = (event) => {
         event.preventDefault();
+
+        // Validação básica do formulário
         const responsavel = document.getElementById('responsavel').value;
         const dataContagem = document.getElementById('dataContagem').value;
+
+        if (!responsavel || !dataContagem) {
+            alert('Por favor, preencha todos os campos obrigatórios.');
+            return;
+        }
+
         const bebidas = getBebidas();
         const detalhesContagem = {};
+        let hasInvalidInput = false;
 
         bebidas.forEach(bebida => {
             const depositoInput = document.getElementById(`deposito-${bebida.id}`);
@@ -392,7 +395,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const unidadesAvulsas = parseFloat(unidadesAvulsasInput?.value) || 0;
             const freezer = parseFloat(freezerInput.value) || 0;
             
-            // Calcula o total de unidades
+            // Validação de valores negativos
+            if (deposito < 0 || unidadesAvulsas < 0 || freezer < 0) {
+                hasInvalidInput = true;
+                return;
+            }
+
             const totalUnidades = (deposito * bebida.unidadePorFardo) + unidadesAvulsas + freezer;
 
             detalhesContagem[bebida.id] = {
@@ -402,6 +410,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalUnidades
             };
         });
+
+        if (hasInvalidInput) {
+            alert('Valores de contagem não podem ser negativos. Por favor, corrija o formulário.');
+            return;
+        }
 
         const novaContagem = {
             id: `contagem-bebidas-${Date.now()}`,
@@ -424,94 +437,78 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnGerarPdfEstoqueBebidas = document.getElementById('btnGerarPdfEstoqueBebidas');
     const semEstoqueBebidasText = document.getElementById('semEstoqueBebidas');
 
-    if (tabelaEstoqueBebidasBody && btnGerarPdfEstoqueBebidas) {
-        const renderizarEstoqueBebidas = () => {
-            const ultimaContagem = getUltimaContagemBebidas();
-            const bebidas = getBebidas();
-            tabelaEstoqueBebidasBody.innerHTML = '';
+    const renderizarEstoqueBebidas = () => {
+        const ultimaContagem = getUltimaContagemBebidas();
+        const bebidas = getBebidas();
+        tabelaEstoqueBebidasBody.innerHTML = '';
 
-            if (!ultimaContagem || Object.keys(ultimaContagem.detalhesContagem).length === 0) {
-                semEstoqueBebidasText.style.display = 'block';
-                return;
-            }
-            semEstoqueBebidasText.style.display = 'none';
+        if (!ultimaContagem || Object.keys(ultimaContagem.detalhesContagem).length === 0) {
+            semEstoqueBebidasText.style.display = 'block';
+            return;
+        }
+        semEstoqueBebidasText.style.display = 'none';
 
-            bebidas.forEach(bebida => {
-                const totalUnidades = ultimaContagem.detalhesContagem[bebida.id]?.totalUnidades || 0;
-                
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${bebida.nome}</td>
-                    <td><span class="badge bg-primary">${bebida.unidade}</span></td>
-                    <td class="text-end fw-bold">${totalUnidades}</td>
-                `;
-                tabelaEstoqueBebidasBody.appendChild(tr);
-            });
-        };
-
-        btnGerarPdfEstoqueBebidas.addEventListener('click', () => {
-            const ultimaContagem = getUltimaContagemBebidas();
-            if (ultimaContagem) {
-                gerarRelatorioPDFBebidas(ultimaContagem, 'Relatorio_Estoque_Atual_Bebidas');
-            } else {
-                alert('Não há dados de contagem para gerar o relatório de estoque.');
-            }
+        bebidas.forEach(bebida => {
+            const totalUnidades = ultimaContagem.detalhesContagem[bebida.id]?.totalUnidades || 0;
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${bebida.nome}</td>
+                <td><span class="badge bg-primary">${bebida.unidade}</span></td>
+                <td class="text-end fw-bold">${totalUnidades}</td>
+            `;
+            tabelaEstoqueBebidasBody.appendChild(tr);
         });
-        
-        renderizarEstoqueBebidas();
-    }
-    
+    };
+
     // Lógica para a tela de Histórico de Contagens de Bebidas (bebidas-historico.html)
     const tabelaHistoricoBebidasBody = document.getElementById('tabelaHistoricoBebidas');
     const semHistoricoBebidasText = document.getElementById('semHistoricoBebidas');
 
-    if (tabelaHistoricoBebidasBody) {
-        const renderizarHistoricoBebidas = () => {
-            const historico = getHistoricoContagensBebidas().reverse();
-            tabelaHistoricoBebidasBody.innerHTML = '';
-            
-            if (historico.length === 0) {
-                semHistoricoBebidasText.style.display = 'block';
-                return;
-            }
-            semHistoricoBebidasText.style.display = 'none';
+    const renderizarHistoricoBebidas = () => {
+        const historico = getHistoricoContagensBebidas().reverse();
+        tabelaHistoricoBebidasBody.innerHTML = '';
+        
+        if (historico.length === 0) {
+            semHistoricoBebidasText.style.display = 'block';
+            return;
+        }
+        semHistoricoBebidasText.style.display = 'none';
 
-            historico.forEach(contagem => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${contagem.data}</td>
-                    <td>${contagem.responsavel}</td>
-                    <td class="text-end">
-                        <button class="btn btn-sm btn-danger btn-excluir-historico" data-id="${contagem.id}"><i class="bi bi-trash"></i></button>
-                        <button class="btn btn-sm btn-info btn-baixar-pdf" data-id="${contagem.id}"><i class="bi bi-file-earmark-arrow-down"></i></button>
-                    </td>
-                `;
-                tabelaHistoricoBebidasBody.appendChild(tr);
+        historico.forEach(contagem => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${contagem.data}</td>
+                <td>${contagem.responsavel}</td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-danger btn-excluir-historico" data-id="${contagem.id}" aria-label="Excluir contagem"><i class="bi bi-trash"></i></button>
+                    <button class="btn btn-sm btn-info btn-baixar-pdf" data-id="${contagem.id}" aria-label="Baixar relatório em PDF"><i class="bi bi-file-earmark-arrow-down"></i></button>
+                </td>
+            `;
+            tabelaHistoricoBebidasBody.appendChild(tr);
+        });
+
+        document.querySelectorAll('.btn-baixar-pdf').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const contagemId = e.currentTarget.dataset.id;
+                const contagem = getHistoricoContagensBebidas().find(c => c.id === contagemId);
+                if (contagem) {
+                    gerarRelatorioPDFBebidas(contagem, `Relatorio_Contagem_Bebidas`);
+                }
             });
+        });
 
-            document.querySelectorAll('.btn-baixar-pdf').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const contagemId = e.currentTarget.dataset.id;
-                    const contagem = getHistoricoContagensBebidas().find(c => c.id === contagemId);
-                    if (contagem) {
-                        gerarRelatorioPDFBebidas(contagem, `Relatorio_Contagem_Bebidas`);
-                    }
-                });
+        document.querySelectorAll('.btn-excluir-historico').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const contagemId = e.currentTarget.dataset.id;
+                if (confirm('Tem certeza que deseja excluir esta contagem?')) {
+                    deleteContagemBebidas(contagemId);
+                    renderizarHistoricoBebidas();
+                }
             });
-
-            document.querySelectorAll('.btn-excluir-historico').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const contagemId = e.currentTarget.dataset.id;
-                    if (confirm('Tem certeza que deseja excluir esta contagem?')) {
-                        deleteContagemBebidas(contagemId);
-                        renderizarHistoricoBebidas();
-                    }
-                });
-            });
-        };
-        renderizarHistoricoBebidas();
-    }
-
+        });
+    };
+    
     // Lógica para a tela de Gerenciamento de Bebidas (bebidas-gerenciar.html)
     const formBebida = document.getElementById('formBebida');
     const bebidaIdInput = document.getElementById('bebidaId');
@@ -524,132 +521,135 @@ document.addEventListener('DOMContentLoaded', () => {
     const semBebidasText = document.getElementById('semBebidas');
     const btnCancelarEdicao = document.getElementById('btnCancelarEdicao');
 
-    if (formBebida) {
-        // Lógica para mostrar/esconder o campo de "quantidade por fardo"
-        const toggleUnidadesPorFardo = () => {
-            if (bebidaUnidadeSelect.value === 'unidade') {
-                unidadesPorFardoDiv.style.display = 'none';
-                unidadePorFardoInput.required = false;
-            } else {
-                unidadesPorFardoDiv.style.display = 'block';
-                unidadePorFardoInput.required = true;
-            }
-        };
+    const toggleUnidadesPorFardo = () => {
+        if (bebidaUnidadeSelect.value === 'unidade') {
+            unidadesPorFardoDiv.style.display = 'none';
+            unidadePorFardoInput.required = false;
+        } else {
+            unidadesPorFardoDiv.style.display = 'block';
+            unidadePorFardoInput.required = true;
+        }
+    };
 
-        bebidaUnidadeSelect.addEventListener('change', toggleUnidadesPorFardo);
+    const renderizarTabelaBebidas = () => {
+        const bebidas = getBebidas();
+        tabelaBebidasBody.innerHTML = '';
+        if (bebidas.length === 0) {
+            semBebidasText.style.display = 'block';
+            return;
+        }
+        semBebidasText.style.display = 'none';
+        bebidas.forEach(bebida => {
+            const tr = document.createElement('tr');
+            const qtdUnidadeTexto = (bebida.unidade !== 'unidade') ? `${bebida.unidadePorFardo} unidades` : 'N/A';
+            tr.innerHTML = `
+                <td>${bebida.nome}</td>
+                <td>${bebida.categoria}</td>
+                <td><span class="badge bg-primary">${bebida.unidade}</span></td>
+                <td>${qtdUnidadeTexto}</td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-info me-2 btn-editar" data-id="${bebida.id}"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-sm btn-danger btn-excluir" data-id="${bebida.id}"><i class="bi bi-trash"></i></button>
+                </td>
+            `;
+            tabelaBebidasBody.appendChild(tr);
+        });
+        document.querySelectorAll('.btn-editar').forEach(btn => btn.addEventListener('click', (e) => editarBebida(e.currentTarget.dataset.id)));
+        document.querySelectorAll('.btn-excluir').forEach(btn => btn.addEventListener('click', (e) => excluirBebida(e.currentTarget.dataset.id)));
+    };
 
-        const renderizarTabelaBebidas = () => {
-            const bebidas = getBebidas();
-            tabelaBebidasBody.innerHTML = '';
-            if (bebidas.length === 0) {
-                semBebidas.style.display = 'block';
-                return;
-            }
-            semBebidas.style.display = 'none';
-            bebidas.forEach(bebida => {
-                const tr = document.createElement('tr');
-                const qtdUnidadeTexto = (bebida.unidade !== 'unidade') ? `${bebida.unidadePorFardo} unidades` : 'N/A';
-                tr.innerHTML = `
-                    <td>${bebida.nome}</td>
-                    <td>${bebida.categoria}</td>
-                    <td><span class="badge bg-primary">${bebida.unidade}</span></td>
-                    <td>${qtdUnidadeTexto}</td>
-                    <td class="text-end">
-                        <button class="btn btn-sm btn-info me-2 btn-editar" data-id="${bebida.id}"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-danger btn-excluir" data-id="${bebida.id}"><i class="bi bi-trash"></i></button>
-                    </td>
-                `;
-                tabelaBebidasBody.appendChild(tr);
-            });
-            document.querySelectorAll('.btn-editar').forEach(btn => btn.addEventListener('click', (e) => editarBebida(e.currentTarget.dataset.id)));
-            document.querySelectorAll('.btn-excluir').forEach(btn => btn.addEventListener('click', (e) => excluirBebida(e.currentTarget.dataset.id)));
-        };
-
-        const salvarBebida = (event) => {
-            event.preventDefault();
-            const nome = bebidaNomeInput.value;
-            const categoria = bebidaCategoriaSelect.value;
-            const unidade = bebidaUnidadeSelect.value;
-            const unidadePorFardo = (unidade === 'unidade') ? 1 : parseFloat(unidadePorFardoInput.value) || 0;
-            const id = bebidaIdInput.value;
-            let bebidas = getBebidas();
-            if (id) {
-                const bebidaIndex = bebidas.findIndex(bebida => bebida.id === id);
-                if (bebidaIndex !== -1) {
-                    bebidas[bebidaIndex].nome = nome;
-                    bebidas[bebidaIndex].categoria = categoria;
-                    bebidas[bebidaIndex].unidade = unidade;
-                    bebidas[bebidaIndex].unidadePorFardo = unidadePorFardo;
-                }
-            } else {
-                const novaBebida = {
-                    id: `bebida-${Date.now()}`,
-                    nome,
-                    categoria,
-                    unidade,
-                    unidadePorFardo
-                };
-                bebidas.push(novaBebida);
-            }
-            saveBebidas(bebidas);
-            formBebida.reset();
-            bebidaIdInput.value = '';
-            renderizarTabelaBebidas();
-            btnCancelarEdicao.style.display = 'none';
-        };
-
-        const editarBebida = (id) => {
-            const bebida = getBebidas().find(bebida => bebida.id === id);
-            if (bebida) {
-                bebidaIdInput.value = bebida.id;
-                bebidaNomeInput.value = bebida.nome;
-                bebidaCategoriaSelect.value = bebida.categoria;
-                bebidaUnidadeSelect.value = bebida.unidade;
-                unidadePorFardoInput.value = bebida.unidadePorFardo;
-                toggleUnidadesPorFardo();
-                btnCancelarEdicao.style.display = 'block';
-            }
-        };
-
-        const excluirBebida = (id) => {
-            if (confirm('Tem certeza que deseja excluir esta bebida?')) {
-                let bebidas = getBebidas().filter(bebida => bebida.id !== id);
-                saveBebidas(bebidas);
-                renderizarTabelaBebidas();
-            }
-        };
-
-        const cancelarEdicao = () => {
-            formBebida.reset();
-            bebidaIdInput.value = '';
-            toggleUnidadesPorFardo();
-            btnCancelarEdicao.style.display = 'none';
-        };
-
-        formBebida.addEventListener('submit', salvarBebida);
-        btnCancelarEdicao.addEventListener('click', cancelarEdicao);
+    const salvarBebida = (event) => {
+        event.preventDefault();
+        const nome = bebidaNomeInput.value;
+        const categoria = bebidaCategoriaSelect.value;
+        const unidade = bebidaUnidadeSelect.value;
+        const unidadePorFardo = (unidade === 'unidade') ? 1 : parseFloat(unidadePorFardoInput.value) || 0;
+        const id = bebidaIdInput.value;
+        let bebidas = getBebidas();
         
-        inicializarBebidas(); // Inicializa as bebidas antes de renderizar a tabela
+        if (unidade !== 'unidade' && unidadePorFardo <= 0) {
+            alert('A quantidade por fardo/caixa deve ser um número positivo.');
+            return;
+        }
+
+        if (id) {
+            const bebidaIndex = bebidas.findIndex(bebida => bebida.id === id);
+            if (bebidaIndex !== -1) {
+                bebidas[bebidaIndex].nome = nome;
+                bebidas[bebidaIndex].categoria = categoria;
+                bebidas[bebidaIndex].unidade = unidade;
+                bebidas[bebidaIndex].unidadePorFardo = unidadePorFardo;
+            }
+        } else {
+            const novaBebida = {
+                id: `bebida-${Date.now()}`,
+                nome,
+                categoria,
+                unidade,
+                unidadePorFardo
+            };
+            bebidas.push(novaBebida);
+        }
+        saveBebidas(bebidas);
+        formBebida.reset();
+        bebidaIdInput.value = '';
         renderizarTabelaBebidas();
+        btnCancelarEdicao.style.display = 'none';
+        toggleUnidadesPorFardo(); // Adicionado para garantir o estado correto do formulário
+    };
+
+    const editarBebida = (id) => {
+        const bebida = getBebidas().find(bebida => bebida.id === id);
+        if (bebida) {
+            bebidaIdInput.value = bebida.id;
+            bebidaNomeInput.value = bebida.nome;
+            bebidaCategoriaSelect.value = bebida.categoria;
+            bebidaUnidadeSelect.value = bebida.unidade;
+            unidadePorFardoInput.value = bebida.unidadePorFardo;
+            toggleUnidadesPorFardo();
+            btnCancelarEdicao.style.display = 'block';
+        }
+    };
+
+    const excluirBebida = (id) => {
+        if (confirm('Tem certeza que deseja excluir esta bebida?')) {
+            let bebidas = getBebidas().filter(bebida => bebida.id !== id);
+            saveBebidas(bebidas);
+            renderizarTabelaBebidas();
+        }
+    };
+
+    const cancelarEdicao = () => {
+        formBebida.reset();
+        bebidaIdInput.value = '';
         toggleUnidadesPorFardo();
-    }
-    
-    // --- INICIALIZAÇÃO DA PÁGINA ATUAL ---
+        btnCancelarEdicao.style.display = 'none';
+    };
+
+    // --- INICIALIZAÇÃO E EVENT LISTENERS DA PÁGINA ---
     if (document.getElementById('formContagemBebidas')) {
-        // Inicializa a tela de contagem
         inicializarBebidas();
         renderizarListaBebidas();
+        setupRealTimeCalculation(); // Chama a função para adicionar listeners
         formContagemBebidas.addEventListener('submit', salvarContagemBebidas);
     } else if (document.getElementById('tabelaEstoqueBebidas')) {
-        // Inicializa a tela de estoque
         renderizarEstoqueBebidas();
+        btnGerarPdfEstoqueBebidas.addEventListener('click', () => {
+            const ultimaContagem = getUltimaContagemBebidas();
+            if (ultimaContagem) {
+                gerarRelatorioPDFBebidas(ultimaContagem, 'Relatorio_Estoque_Atual_Bebidas');
+            } else {
+                alert('Não há dados de contagem para gerar o relatório de estoque.');
+            }
+        });
     } else if (document.getElementById('tabelaHistoricoBebidas')) {
-        // Inicializa a tela de histórico
         renderizarHistoricoBebidas();
     } else if (document.getElementById('formBebida')) {
-        // Inicializa a tela de gerenciamento
         inicializarBebidas();
         renderizarTabelaBebidas();
         toggleUnidadesPorFardo();
+        formBebida.addEventListener('submit', salvarBebida);
+        bebidaUnidadeSelect.addEventListener('change', toggleUnidadesPorFardo);
+        btnCancelarEdicao.addEventListener('click', cancelarEdicao);
     }
 });
