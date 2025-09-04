@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estoque Atual de Bebidas</title>
+    <title>Estoque de Bebidas - La Giovana's Pizzaria</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="style.css">
@@ -20,16 +20,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="index.html" aria-label="Contagem"><i class="bi bi-house me-2"></i>Contagem</a>
+                        <a class="nav-link" href="index.html"><i class="bi bi-house me-2"></i>Contagem</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="bebidas-estoque.html" aria-label="Estoque"><i class="bi bi-box me-2"></i>Estoque</a>
+                        <a class="nav-link active" aria-current="page" href="bebidas-estoque.html"><i class="bi bi-box me-2"></i>Estoque</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="bebidas-historico.html" aria-label="Histórico"><i class="bi bi-clock-history me-2"></i>Histórico</a>
+                        <a class="nav-link" href="bebidas-historico.html"><i class="bi bi-clock-history me-2"></i>Histórico</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="bebidas-gerenciar.html" aria-label="Gerenciar"><i class="bi bi-gear me-2"></i>Gerenciar</a>
+                        <a class="nav-link" href="bebidas-gerenciar.html"><i class="bi bi-gear me-2"></i>Gerenciar</a>
                     </li>
                 </ul>
             </div>
@@ -37,36 +37,89 @@
     </nav>
 
     <div class="container my-5">
-        <h1 class="text-center mb-4">Estoque Atual de Bebidas</h1>
+        <header class="text-center mb-4">
+            <h1 class="mb-3">Estoque Atual de Bebidas</h1>
+            <p class="lead text-muted">Visualize a posição atual do estoque baseada na última contagem</p>
+        </header>
 
-        <div class="card p-4 shadow-sm mb-4">
-            <h2 class="card-title text-center mb-4">Posição Final das Bebidas</h2>
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>Bebida</th>
-                            <th>Unidade</th>
-                            <th class="text-end">Posição Final</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabelaEstoqueBebidas">
-                    </tbody>
-                </table>
+        <main>
+            <div class="card p-4 shadow-sm mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="card-title mb-0">Posição Final das Bebidas</h2>
+                    <span class="badge bg-info fs-6">
+                        <i class="bi bi-info-circle me-1"></i>
+                        <span id="infoUltimaContagem">Última contagem: </span>
+                    </span>
+                </div>
+                
+                <div class="alert alert-info d-flex align-items-center" role="alert">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    <div>
+                        Os valores representam o total em <strong>unidades individuais</strong>.
+                        <button type="button" class="btn btn-sm btn-outline-info ms-2" data-bs-toggle="collapse" data-bs-target="#infoDetalhes" aria-expanded="false" aria-controls="infoDetalhes">
+                            Detalhes
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="collapse mb-3" id="infoDetalhes">
+                    <div class="card card-body">
+                        <p class="mb-2"><strong>Como interpretar os valores:</strong></p>
+                        <ul class="mb-0">
+                            <li><strong>Fardos/Caixas:</strong> Convertidos para unidades (ex: 2 fardos × 12 unidades = 24 unidades)</li>
+                            <li><strong>Unidades avulsas:</strong> Somadas diretamente ao total</li>
+                            <li><strong>Freezer:</strong> Unidades armazenadas no freezer</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" aria-describedby="tableDescription">
+                        <caption id="tableDescription" class="visually-hidden">Tabela de estoque atual de bebidas mostrando nome, unidade de medida e quantidade em estoque</caption>
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col">Bebida</th>
+                                <th scope="col">Unidade</th>
+                                <th scope="col" class="text-end">Posição Final</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaEstoqueBebidas">
+                            <!-- Dados carregados dinamicamente via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="loadingEstoque" class="text-center py-4">
+                    <div class="loading-spinner"></div>
+                    <p class="mt-2 text-muted">Carregando dados do estoque...</p>
+                </div>
+                
+                <p id="semEstoqueBebidas" class="text-center text-muted mt-3" style="display: none;">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    Não há dados de estoque para exibir.<br>
+                    <small>Realize uma contagem na página inicial para ver os dados aqui.</small>
+                </p>
             </div>
-            <p id="semEstoqueBebidas" class="text-center text-muted mt-3" style="display: none;">
-                Não há dados de estoque para exibir.
-            </p>
-        </div>
 
-        <div class="d-grid gap-2 mt-4">
-            <button id="btnGerarPdfEstoqueBebidas" class="btn btn-info btn-lg" aria-label="Gerar PDF do Estoque">
-                <i class="bi bi-file-earmark-pdf me-2"></i>Gerar PDF do Estoque
-            </button>
-        </div>
+            <div class="d-grid gap-2 mt-4">
+                <button id="btnGerarPdfEstoqueBebidas" class="btn btn-info btn-lg">
+                    <i class="bi bi-file-earmark-pdf me-2"></i>Gerar PDF do Estoque
+                </button>
+                <a href="index.html" class="btn btn-outline-primary mt-2">
+                    <i class="bi bi-plus-circle me-2"></i>Realizar Nova Contagem
+                </a>
+            </div>
+        </main>
     </div>
 
+    <!-- Área para notificações -->
+    <div aria-live="polite" aria-atomic="true" class="position-relative">
+        <div class="toast-container p-3 top-0 end-0" id="toastContainer"></div>
+    </div>
+
+    <!-- Scripts JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="pdf-generator.js"></script>
     <script src="bebidas.js"></script>
 </body>
 </html>
