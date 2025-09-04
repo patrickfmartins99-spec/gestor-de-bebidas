@@ -1,0 +1,144 @@
+/* Estilos específicos para PDF - Mantém a identidade visual */
+.pdf-container {
+    font-family: Arial, sans-serif;
+    font-size: 10pt;
+    color: #333;
+    margin: 0;
+    padding: 15px;
+    width: 100%;
+}
+
+.pdf-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 3px solid #dc3545;
+}
+
+.pdf-logo {
+    width: 45px;
+    height: 45px;
+    background-color: #dc3545;
+    color: white;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.pdf-company-name {
+    color: #dc3545;
+    font-size: 20px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.pdf-company-info {
+    font-size: 11px;
+    color: #6c757d;
+    margin: 3px 0 0 0;
+}
+
+.pdf-report-title {
+    font-size: 16px;
+    color: #495057;
+    margin: 5px 0 0 0;
+    font-weight: normal;
+}
+
+.pdf-info-box {
+    background-color: #f8f9fa;
+    padding: 12px;
+    border-radius: 5px;
+    border-left: 4px solid #dc3545;
+    margin-bottom: 15px;
+}
+
+.pdf-info-text {
+    margin: 0;
+    font-size: 12px;
+}
+
+.pdf-info-text strong {
+    color: #495057;
+}
+
+.pdf-info-text .pdf-highlight {
+    color: #dc3545;
+}
+
+.pdf-section-title {
+    text-align: center;
+    font-size: 14px;
+    color: #495057;
+    border-bottom: 2px solid #6c757d;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+.pdf-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+    font-size: 9pt;
+    page-break-inside: avoid;
+}
+
+.pdf-table th {
+    background-color: #495057;
+    color: white;
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    text-align: center;
+    font-weight: bold;
+}
+
+.pdf-table td {
+    padding: 6px;
+    border: 1px solid #dee2e6;
+}
+
+.pdf-category-row {
+    background-color: #e9ecef;
+    font-weight: bold;
+}
+
+.pdf-category-row td {
+    padding: 8px;
+}
+
+.pdf-zero-stock {
+    background-color: #fff3cd;
+}
+
+.pdf-consumo {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.pdf-reposicao {
+    color: #198754;
+    font-weight: bold;
+}
+
+.pdf-footer {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px solid #dee2e6;
+    font-size: 9px;
+    color: #6c757d;
+}
+
+.pdf-legend {
+    font-size: 9px;
+    color: #6c757d;
+    margin-top: 10px;
+}
+
+.pdf-page-break {
+    page-break-before: always;
+}
