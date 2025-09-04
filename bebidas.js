@@ -207,135 +207,203 @@ const calcularEstatisticas = () => {
 
 // --- FUNÇÕES AUXILIARES DE RELATÓRIO ---
 const gerarRelatorioPDFBebidas = (contagem, filenamePrefix) => {
-  const bebidas = AppState.getBebidas();
-  const dadosEmpresa = {
-    nome: "La Giovana's Pizzaria",
-    titulo: "Relatório de Contagem de Bebidas"
-  };
-  
-  const dataAtual = new Date().toLocaleDateString('pt-BR');
-  const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-  if (!contagem || !contagem.detalhesContagem || Object.keys(contagem.detalhesContagem).length === 0) {
-    showNotification('Não há dados de contagem para gerar o relatório.', 'warning');
-    return;
-  }
-
-  const stats = calcularEstatisticas();
-  const ehDomingo = isDomingo(contagem.data);
-
-  let tabelaContagemRows = '';
-  let tabelaEstatisticasRows = '';
-  let hasStats = Object.keys(stats).length > 0;
-
-  bebidas.forEach(bebida => {
-    const dados = contagem.detalhesContagem[bebida.id] || {};
-    const totalUnidades = dados.totalUnidades || 0;
-    const statsBebida = stats[bebida.id] || {};
+    const bebidas = AppState.getBebidas();
+    const dadosEmpresa = {
+        nome: "La Giovana's Pizzaria",
+        endereco: "Rua Exemplo, 123 - Cidade - Estado",
+        telefone: "(XX) XXXX-XXXX",
+        titulo: "Relatório de Contagem de Bebidas"
+    };
     
-    let depositoTexto = '';
-    if (bebida.unidade === 'caixa' || bebida.unidade === 'fardo') {
-      depositoTexto = `${dados.deposito || 0} ${bebida.unidade}s e ${dados.unidadesAvulsas || 0} unidades`;
-    } else {
-      depositoTexto = `${dados.deposito || 0} unidades`;
+    const dataAtual = new Date().toLocaleDateString('pt-BR');
+    const horaAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const dataFormatada = new Date(contagem.data + 'T00:00:00').toLocaleDateString('pt-BR');
+
+    if (!contagem || !contagem.detalhesContagem || Object.keys(contagem.detalhesContagem).length === 0) {
+        showNotification('Não há dados de contagem para gerar o relatório.', 'warning');
+        return;
     }
 
-    // Tabela Principal de Contagem
-    tabelaContagemRows += `
-      <tr>
-        <td style="padding: 10px; border: 1px solid #000;">${bebida.nome}</td>
-        <td style="padding: 10px; border: 1px solid #000; text-align: center;">${depositoTexto}</td>
-        <td style="padding: 10px; border: 1px solid #000; text-align: center;">${dados.freezer || 0}</td>
-        <td style="padding: 10px; border: 1px solid #000; text-align: center;">${totalUnidades}</td>
-      </tr>
-    `;
+    const stats = calcularEstatisticas();
+    const ehDomingo = isDomingo(contagem.data);
 
-    // Tabela de Estatísticas (se houver dados)
-    if (hasStats) {
-      tabelaEstatisticasRows += `
-        <tr>
-          <td style="padding: 10px; border: 1px solid #000;">${bebida.nome}</td>
-          <td style="padding: 10px; border: 1px solid #000; text-align: center;">${statsBebida.gasto !== undefined ? statsBebida.gasto : 'N/A'}</td>
-          <td style="padding: 10px; border: 1px solid #000; text-align: center;">${statsBebida.reposicao !== undefined ? statsBebida.reposicao : 'N/A'}</td>
-          <td style="padding: 10px; border: 1px solid #000; text-align: center;">${ehDomingo && statsBebida.sugestao !== undefined ? statsBebida.sugestao : 'N/A'}</td>
-        </tr>
-      `;
-    }
-  });
-  
-  let conteudoTabelaEstatisticas = '';
-  if (hasStats) {
-    conteudoTabelaEstatisticas = `
-      <div style="margin-top: 30px;">
-        <h2 style="text-align: center; margin-bottom: 15px; font-size: 20px;">Estatísticas de Consumo e Reposição</h2>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px;">
-          <thead>
-            <tr style="background-color: #333; color: white;">
-              <th style="padding: 12px; border: 1px solid #000; text-align: left;">BEBIDA</th>
-              <th style="padding: 12px; border: 1px solid #000; text-align: center;">CONSUMO (UNIDADES)</th>
-              <th style="padding: 12px; border: 1px solid #000; text-align: center;">REPOSIÇÃO (UNIDADES)</th>
-              ${ehDomingo ? '<th style="padding: 12px; border: 1px solid #000; text-align: center;">SUGESTÃO DE COMPRA (UNIDADES)</th>' : ''}
+    let tabelaContagemRows = '';
+    let tabelaEstatisticasRows = '';
+    let hasStats = Object.keys(stats).length > 0;
+
+    // Agrupar bebidas por categoria
+    const bebidasPorCategoria = {};
+    bebidas.forEach(bebida => {
+        if (!bebidasPorCategoria[bebida.categoria]) {
+            bebidasPorCategoria[bebida.categoria] = [];
+        }
+        bebidasPorCategoria[bebida.categoria].push(bebida);
+    });
+
+    // Gerar tabela organizada por categorias
+    Object.keys(bebidasPorCategoria).sort().forEach(categoria => {
+        tabelaContagemRows += `
+            <tr style="background-color: #f8f9fa;">
+                <td colspan="4" style="padding: 12px; border: 1px solid #dee2e6; font-weight: bold; background-color: #e9ecef;">
+                    <i class="bi bi-tag-fill me-2"></i>${categoria}
+                </td>
             </tr>
-          </thead>
-          <tbody>
-            ${tabelaEstatisticasRows}
-          </tbody>
-        </table>
-      </div>
+        `;
+        
+        bebidasPorCategoria[categoria].forEach(bebida => {
+            const dados = contagem.detalhesContagem[bebida.id] || {};
+            const totalUnidades = dados.totalUnidades || 0;
+            const statsBebida = stats[bebida.id] || {};
+            
+            let depositoTexto = '';
+            if (bebida.unidade === 'caixa' || bebida.unidade === 'fardo') {
+                const unidadesDeposito = (dados.deposito || 0) * bebida.unidadePorFardo;
+                depositoTexto = `${dados.deposito || 0} ${bebida.unidade === 'caixa' ? 'cx' : 'fd'} (${unidadesDeposito} un)`;
+            } else {
+                depositoTexto = `${dados.deposito || 0} un`;
+            }
+
+            // Tabela Principal de Contagem
+            tabelaContagemRows += `
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #dee2e6;">${bebida.nome}</td>
+                    <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">${depositoTexto}</td>
+                    <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">${dados.freezer || 0}</td>
+                    <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center; font-weight: bold; background-color: ${totalUnidades === 0 ? '#fff3cd' : '#f8f9fa'};">${totalUnidades}</td>
+                </tr>
+            `;
+
+            // Tabela de Estatísticas (se houver dados)
+            if (hasStats) {
+                tabelaEstatisticasRows += `
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #dee2e6;">${bebida.nome}</td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center; color: ${statsBebida.gasto > 0 ? '#dc3545' : '#6c757d'};">${statsBebida.gasto !== undefined ? statsBebida.gasto : '-'}</td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center; color: ${statsBebida.reposicao > 0 ? '#198754' : '#6c757d'};">${statsBebida.reposicao !== undefined ? statsBebida.reposicao : '-'}</td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6; text-align: center; font-weight: bold; background-color: ${statsBebida.sugestao > 0 ? '#d1e7dd' : '#f8f9fa'};">${ehDomingo && statsBebida.sugestao !== undefined ? statsBebida.sugestao : '-'}</td>
+                    </tr>
+                `;
+            }
+        });
+    });
+    
+    let conteudoTabelaEstatisticas = '';
+    if (hasStats) {
+        conteudoTabelaEstatisticas = `
+            <div style="margin-top: 30px; page-break-before: always;">
+                <h2 style="text-align: center; margin-bottom: 20px; font-size: 18px; color: #495057; border-bottom: 2px solid #6c757d; padding-bottom: 10px;">
+                    <i class="bi bi-graph-up me-2"></i>Estatísticas de Consumo e Reposição
+                </h2>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; border: 1px solid #dee2e6;">
+                    <thead>
+                        <tr style="background-color: #495057; color: white;">
+                            <th style="padding: 12px; border: 1px solid #dee2e6; text-align: left; font-weight: bold;">BEBIDA</th>
+                            <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center; font-weight: bold;">CONSUMO (UNIDADES)</th>
+                            <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center; font-weight: bold;">REPOSIÇÃO (UNIDADES)</th>
+                            ${ehDomingo ? '<th style="padding: 12px; border: 1px solid #dee2e6; text-align: center; font-weight: bold;">SUGESTÃO DE COMPRA</th>' : ''}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tabelaEstatisticasRows}
+                    </tbody>
+                </table>
+                <div style="margin-top: 15px; font-size: 11px; color: #6c757d;">
+                    <p><strong>Legenda:</strong> Valores em vermelho indicam consumo, valores em verde indicam reposição.</p>
+                </div>
+            </div>
+        `;
+    }
+
+    const conteudoRelatorio = `
+        <div style="font-family: 'Arial', sans-serif; padding: 25px; color: #333; line-height: 1.4;">
+            <!-- Cabeçalho -->
+            <div style="text-align: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 3px solid #dc3545;">
+                <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 15px;">
+                    <div style="width: 60px; height: 60px; background-color: #dc3545; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 24px; font-weight: bold;">LG</div>
+                    <div>
+                        <h1 style="margin: 0; color: #dc3545; font-size: 28px; font-weight: bold;">${dadosEmpresa.nome}</h1>
+                        <p style="margin: 5px 0 0 0; font-size: 14px; color: #6c757d;">${dadosEmpresa.endereco} | ${dadosEmpresa.telefone}</p>
+                    </div>
+                </div>
+                <h2 style="margin: 0; font-size: 20px; color: #495057; font-weight: normal;">${dadosEmpresa.titulo}</h2>
+            </div>
+            
+            <!-- Informações da Contagem -->
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #dc3545; margin-bottom: 25px;">
+                <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+                    <div style="margin-bottom: 10px;">
+                        <p style="margin: 0; font-size: 15px;"><strong style="color: #495057;">Responsável:</strong> <span style="color: #dc3545;">${contagem.responsavel}</span></p>
+                        <p style="margin: 5px 0 0 0; font-size: 15px;"><strong style="color: #495057;">Data da contagem:</strong> ${dataFormatada}</p>
+                    </div>
+                    <div>
+                        <p style="margin: 0; font-size: 12px; color: #6c757d;">Nº do Registro: ${contagem.id}</p>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #6c757d;">Emitido em: ${dataAtual} às ${horaAtual}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tabela de Contagem -->
+            <h3 style="text-align: center; margin-bottom: 20px; font-size: 18px; color: #495057; border-bottom: 2px solid #6c757d; padding-bottom: 10px;">
+                <i class="bi bi-list-check me-2"></i>Relatório de Contagem
+            </h3>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; border: 1px solid #dee2e6; page-break-inside: auto;">
+                <thead>
+                    <tr style="background-color: #495057; color: white;">
+                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: left; font-weight: bold;">BEBIDA</th>
+                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center; font-weight: bold;">DEPÓSITO</th>
+                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center; font-weight: bold;">FREEZER</th>
+                        <th style="padding: 12px; border: 1px solid #dee2e6; text-align: center; font-weight: bold;">TOTAL ESTOQUE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tabelaContagemRows}
+                </tbody>
+            </table>
+            
+            <div style="margin-top: 15px; font-size: 11px; color: #6c757d;">
+                <p><strong>Legenda:</strong> cx = caixa, fd = fardo, un = unidades. Itens em amarelo indicam estoque zerado.</p>
+            </div>
+            
+            ${conteudoTabelaEstatisticas}
+
+            <!-- Rodapé -->
+            <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #dee2e6; font-size: 11px; color: #6c757d;">
+                <p style="margin: 0;">${dadosEmpresa.nome} - Sistema de Gestão de Estoque</p>
+                <p style="margin: 5px 0;">Documento gerado automaticamente em ${dataAtual} às ${horaAtual}</p>
+            </div>
+        </div>
     `;
-  }
 
-  const conteudoRelatorio = `
-    <div style="font-family: Arial, sans-serif; padding: 20px; color: #000;">
-      <div style="text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #000;">
-        <h1 style="margin: 0; color: #000; font-size: 24px;">${dadosEmpresa.nome}</h1>
-        <p style="margin: 5px 0; font-size: 18px; color: #000;">${dadosEmpresa.titulo}</p>
-      </div>
-      
-      <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #000; border-radius: 8px;">
-        <p style="margin: 5px 0; font-size: 16px;"><strong>Responsável:</strong> ${contagem.responsavel}</p>
-        <p style="margin: 5px 0; font-size: 16px;"><strong>Data da contagem:</strong> ${contagem.data}</p>
-        <p style="margin: 5px 0; font-size: 14px; color: #333;">Nº do Registro: ${contagem.id}</p>
-      </div>
-      
-      <h2 style="text-align: center; margin-bottom: 15px; font-size: 20px;">Relatório de Contagem</h2>
-      <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px;">
-        <thead>
-          <tr style="background-color: #333; color: white;">
-            <th style="padding: 12px; border: 1px solid #000; text-align: left;">BEBIDA</th>
-            <th style="padding: 12px; border: 1px solid #000; text-align: center;">DEPÓSITO</th>
-            <th style="padding: 12px; border: 1px solid #000; text-align: center;">FREEZER (UNIDADES)</th>
-            <th style="padding: 12px; border: 1px solid #000; text-align: center;">TOTAL EM ESTOQUE (UNIDADES)</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${tabelaContagemRows}
-        </tbody>
-      </table>
-      
-      ${conteudoTabelaEstatisticas}
+    const orientation = ehDomingo && hasStats ? 'landscape' : 'portrait';
+    const options = {
+        margin: [0.5, 0.5, 0.5, 0.5],
+        filename: `${filenamePrefix}_${contagem.data}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+            scale: 2, 
+            useCORS: true, 
+            logging: false,
+            backgroundColor: '#ffffff'
+        },
+        jsPDF: { 
+            unit: 'mm', 
+            format: 'a4', 
+            orientation: orientation,
+            compress: true
+        }
+    };
 
-      <div style="text-align: center; margin-top: 25px; font-size: 12px; color: #6c757d;">
-        Documento gerado em ${dataAtual} às ${horaAtual}.
-      </div>
-    </div>
-  `;
-
-  const orientation = ehDomingo && hasStats ? 'landscape' : 'portrait';
-  const options = {
-    margin: 0.5,
-    filename: `${filenamePrefix}_${contagem.data}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, logging: true },
-    jsPDF: { unit: 'in', format: 'letter', orientation: orientation }
-  };
-
-  // Adicionar indicador de carregamento
-  showNotification('Gerando relatório PDF...', 'info');
-  
-  html2pdf().set(options).from(conteudoRelatorio).save().then(() => {
-    showNotification('Relatório gerado com sucesso!', 'success');
-  });
+    // Adicionar indicador de carregamento
+    showNotification('Gerando relatório PDF...', 'info');
+    
+    // Gerar PDF
+    html2pdf().set(options).from(conteudoRelatorio).save().then(() => {
+        showNotification('Relatório gerado com sucesso!', 'success');
+    }).catch(error => {
+        console.error('Erro ao gerar PDF:', error);
+        showNotification('Erro ao gerar o relatório. Tente novamente.', 'danger');
+    });
 };
 
 // --- LÓGICA PARA A TELA DE CONTAGEM (index.html) ---
