@@ -1,22 +1,15 @@
-// pdf-generator.js - Sistema dedicado para geração de relatórios PDF
+// pdf-generator.js - Sistema independente para geração de PDF
 
 class PDFGenerator {
-    constructor() {
-        this.templateURL = 'pdf-template.html';
-    }
-
     async gerarRelatorioPDF(contagem, filenamePrefix, tipoRelatorio = 'contagem') {
         try {
             showNotification('Gerando relatório PDF...', 'info');
             
-            // Carregar o template
-            const templateContent = await this.carregarTemplate();
-            
             // Preparar os dados
             const dados = this.prepararDados(contagem, tipoRelatorio);
             
-            // Renderizar o template com os dados
-            const htmlContent = this.renderizarTemplate(templateContent, dados);
+            // Criar conteúdo HTML diretamente
+            const htmlContent = this.criarConteudoHTML(dados);
             
             // Gerar o PDF
             await this.gerarPDF(htmlContent, filenamePrefix);
@@ -30,14 +23,6 @@ class PDFGenerator {
         }
     }
 
-    async carregarTemplate() {
-        const response = await fetch(this.templateURL);
-        if (!response.ok) {
-            throw new Error('Template de PDF não encontrado');
-        }
-        return await response.text();
-    }
-
     prepararDados(contagem, tipoRelatorio) {
         const bebidas = AppState.getBebidas();
         const historico = AppState.getHistoricoContagensBebidas();
@@ -45,7 +30,23 @@ class PDFGenerator {
         const penultimaContagem = ultimaContagemIndex > 0 ? historico[ultimaContagemIndex - 1] : null;
         const temComparativo = !!penultimaContagem;
 
-        // Agrupar bebidas por categoria
+        return {
+            contagem,
+            penultimaContagem,
+            bebidas,
+            temComparativo,
+            tipoRelatorio,
+            dataAtual: new Date().toLocaleDateString('pt-BR'),
+            horaAtual: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        };
+    }
+
+    criarConteudoHTML(dados) {
+        const { contagem, penultimaContagem, bebidas, temComparativo, dataAtual, horaAtual } = dados;
+        const dataFormatada = new Date(contagem.data + 'T00:00:00').toLocaleDateString('pt-BR');
+        const dataContagemAnterior = penultimaContagem ? new Date(penultimaContagem.data + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+
+        // Agrupar bebidas por categoria para melhor organização
         const bebidasPorCategoria = {};
         bebidas.forEach(bebida => {
             if (!bebidasPorCategoria[bebida.categoria]) {
@@ -54,53 +55,14 @@ class PDFGenerator {
             bebidasPorCategoria[bebida.categoria].push(bebida);
         });
 
-        return {
-            contagem,
-            penultimaContagem,
-            bebidasPorCategoria,
-            temComparativo,
-            tipoRelatorio,
-            dataAtual: new Date().toLocaleDateString('pt-BR'),
-            horaAtual: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-        };
-    }
+        let tabelaRows = '';
 
-    renderizarTemplate(templateContent, dados) {
-        const { contagem, penultimaContagem, bebidasPorCategoria, temComparativo, dataAtual, horaAtual } = dados;
-        const dataFormatada = new Date(contagem.data + 'T00:00:00').toLocaleDateString('pt-BR');
-        const dataContagemAnterior = penultimaContagem ? new Date(penultimaContagem.data + 'T00:00:00').toLocaleDateString('pt-BR') : '';
-
-        // Construir informações da contagem
-        const infoBoxContent = `
-            <p class="pdf-info-text"><strong>Responsável:</strong> <span class="pdf-highlight">${contagem.responsavel}</span></p>
-            <p class="pdf-info-text"><strong>Data da contagem:</strong> ${dataFormatada}</p>
-            ${temComparativo ? `<p class="pdf-info-text"><strong>Comparativo com:</strong> ${dataContagemAnterior}</p>` : ''}
-            <p class="pdf-info-text"><strong>Nº do Registro:</strong> ${contagem.id}</p>
-            <p class="pdf-info-text"><strong>Emitido em:</strong> ${dataAtual} às ${horaAtual}</p>
-        `;
-
-        // Construir cabeçalho da tabela
-        const tableHeadContent = `
-            <tr>
-                <th>BEBIDA</th>
-                <th>DEPÓSITO</th>
-                <th>FREEZER</th>
-                <th>TOTAL</th>
-                ${temComparativo ? `
-                    <th>VARIAÇÃO</th>
-                    <th>CONSUMO</th>
-                    <th>REPOSIÇÃO</th>
-                ` : ''}
-            </tr>
-        `;
-
-        // Construir corpo da tabela
-        let tableBodyContent = '';
+        // Gerar tabela organizada por categorias
         Object.keys(bebidasPorCategoria).sort().forEach(categoria => {
-            tableBodyContent += `
-                <tr class="pdf-category-row">
-                    <td colspan="${temComparativo ? '7' : '4'}">
-                        📁 ${categoria}
+            tabelaRows += `
+                <tr style="background-color: #e9ecef;">
+                    <td colspan="${temComparativo ? 5 : 4}" style="padding: 8px; font-weight: bold;">
+                        ${categoria}
                     </td>
                 </tr>
             `;
@@ -109,70 +71,163 @@ class PDFGenerator {
                 const dadosBebida = contagem.detalhesContagem[bebida.id] || {};
                 const totalUnidades = dadosBebida.totalUnidades || 0;
                 
-                let depositoUnidades = 0;
                 let depositoTexto = '';
                 if (bebida.unidade === 'caixa' || bebida.unidade === 'fardo') {
-                    depositoUnidades = (dadosBebida.deposito || 0) * bebida.unidadePorFardo;
                     depositoTexto = `${dadosBebida.deposito || 0} ${bebida.unidade === 'caixa' ? 'cx' : 'fd'}`;
                 } else {
-                    depositoUnidades = dadosBebida.deposito || 0;
                     depositoTexto = `${dadosBebida.deposito || 0} un`;
                 }
                 
                 const freezerUnidades = dadosBebida.freezer || 0;
                 
-                let gastoEstimado = 0;
-                let reposicaoEstimada = 0;
-                let variacaoTexto = '→ 0';
-                let variacaoClass = '';
-                
+                let variacaoTexto = '';
+                let variacaoStyle = '';
                 if (temComparativo) {
                     const dadosAnteriores = penultimaContagem.detalhesContagem[bebida.id] || {};
                     const totalAnterior = dadosAnteriores.totalUnidades || 0;
                     
                     if (totalUnidades < totalAnterior) {
-                        gastoEstimado = totalAnterior - totalUnidades;
-                        variacaoTexto = `↓ ${gastoEstimado}`;
-                        variacaoClass = 'pdf-consumo';
+                        variacaoTexto = `↓ ${totalAnterior - totalUnidades}`;
+                        variacaoStyle = 'color: #dc3545;';
                     } else if (totalUnidades > totalAnterior) {
-                        reposicaoEstimada = totalUnidades - totalAnterior;
-                        variacaoTexto = `↑ ${reposicaoEstimada}`;
-                        variacaoClass = 'pdf-reposicao';
+                        variacaoTexto = `↑ ${totalUnidades - totalAnterior}`;
+                        variacaoStyle = 'color: #198754;';
+                    } else {
+                        variacaoTexto = '→ 0';
                     }
                 }
 
-                tableBodyContent += `
+                tabelaRows += `
                     <tr>
-                        <td>${bebida.nome}</td>
-                        <td style="text-align: center;">${depositoTexto}</td>
-                        <td style="text-align: center;">${freezerUnidades}</td>
-                        <td style="text-align: center; font-weight: bold; ${totalUnidades === 0 ? 'background-color: #fff3cd;' : ''}">${totalUnidades}</td>
-                        ${temComparativo ? `
-                            <td style="text-align: center; font-weight: bold;" class="${variacaoClass}">${variacaoTexto}</td>
-                            <td style="text-align: center;" class="${gastoEstimado > 0 ? 'pdf-consumo' : ''}">${gastoEstimado}</td>
-                            <td style="text-align: center;" class="${reposicaoEstimada > 0 ? 'pdf-reposicao' : ''}">${reposicaoEstimada}</td>
-                        ` : ''}
+                        <td style="padding: 6px;">${bebida.nome}</td>
+                        <td style="padding: 6px; text-align: center;">${depositoTexto}</td>
+                        <td style="padding: 6px; text-align: center;">${freezerUnidades}</td>
+                        <td style="padding: 6px; text-align: center; font-weight: bold; ${totalUnidades === 0 ? 'background-color: #fff3cd;' : ''}">${totalUnidades}</td>
+                        ${temComparativo ? `<td style="padding: 6px; text-align: center; font-weight: bold; ${variacaoStyle}">${variacaoTexto}</td>` : ''}
                     </tr>
                 `;
             });
         });
 
-        // Construir legenda
-        const legendContent = `
-            <p><strong>Legenda:</strong> cx = caixa, fd = fardo, un = unidades. 
-            ${temComparativo ? '↓ Consumo, ↑ Reposição, → Sem alteração. ' : ''}
-            Itens em amarelo indicam estoque zerado.</p>
+        return `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Relatório de Bebidas - La Giovana's</title>
+                <style>
+                    body { 
+                        font-family: Arial, sans-serif; 
+                        font-size: 12px; 
+                        padding: 20px; 
+                        color: #333;
+                        line-height: 1.4;
+                    }
+                    .header { 
+                        text-align: center; 
+                        margin-bottom: 20px; 
+                        padding-bottom: 15px; 
+                        border-bottom: 2px solid #dc3545; 
+                    }
+                    .company-name { 
+                        color: #dc3545; 
+                        font-size: 22px; 
+                        font-weight: bold; 
+                        margin: 0; 
+                    }
+                    .report-title { 
+                        font-size: 16px; 
+                        color: #495057; 
+                        margin: 5px 0; 
+                    }
+                    .info-box { 
+                        background-color: #f8f9fa; 
+                        padding: 15px; 
+                        border-radius: 5px; 
+                        border-left: 4px solid #dc3545; 
+                        margin-bottom: 20px; 
+                    }
+                    .info-text { 
+                        margin: 4px 0; 
+                        font-size: 12px; 
+                    }
+                    .info-text strong { 
+                        color: #495057; 
+                    }
+                    table { 
+                        width: 100%; 
+                        border-collapse: collapse; 
+                        margin-bottom: 15px; 
+                        font-size: 11px; 
+                    }
+                    th { 
+                        background-color: #495057; 
+                        color: white; 
+                        padding: 10px; 
+                        border: 1px solid #dee2e6; 
+                        text-align: center; 
+                        font-weight: bold;
+                    }
+                    td { 
+                        padding: 8px; 
+                        border: 1px solid #dee2e6; 
+                    }
+                    .footer { 
+                        text-align: center; 
+                        margin-top: 25px; 
+                        padding-top: 15px; 
+                        border-top: 1px solid #dee2e6; 
+                        font-size: 10px; 
+                        color: #6c757d; 
+                    }
+                    .legend {
+                        font-size: 10px;
+                        color: #6c757d;
+                        margin-top: 10px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1 class="company-name">La Giovana's Pizzaria</h1>
+                    <h2 class="report-title">Relatório de ${temComparativo ? 'Contagem' : 'Estoque'} de Bebidas</h2>
+                </div>
+                
+                <div class="info-box">
+                    <p class="info-text"><strong>Responsável:</strong> ${contagem.responsavel}</p>
+                    <p class="info-text"><strong>Data da contagem:</strong> ${dataFormatada}</p>
+                    ${temComparativo ? `<p class="info-text"><strong>Comparativo com:</strong> ${dataContagemAnterior}</p>` : ''}
+                    <p class="info-text"><strong>Emitido em:</strong> ${dataAtual} às ${horaAtual}</p>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bebida</th>
+                            <th>Depósito</th>
+                            <th>Freezer</th>
+                            <th>Total</th>
+                            ${temComparativo ? '<th>Variação</th>' : ''}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tabelaRows}
+                    </tbody>
+                </table>
+                
+                <div class="legend">
+                    <p><strong>Legenda:</strong> cx = caixa, fd = fardo, un = unidades. 
+                    ${temComparativo ? '↓ Consumo, ↑ Reposição, → Sem alteração. ' : ''}
+                    Itens em amarelo indicam estoque zerado.</p>
+                </div>
+
+                <div class="footer">
+                    <p>La Giovana's Pizzaria - Sistema de Gestão de Estoque</p>
+                    <p>Documento gerado automaticamente em ${dataAtual} às ${horaAtual}</p>
+                </div>
+            </body>
+            </html>
         `;
-
-        // Substituir os conteúdos dinâmicos no template
-        let html = templateContent;
-        html = html.replace('<!-- Informações dinâmicas serão inseridas aqui via JavaScript -->', infoBoxContent);
-        html = html.replace('<!-- Cabeçalho dinâmico -->', tableHeadContent);
-        html = html.replace('<!-- Conteúdo dinâmico -->', tableBodyContent);
-        html = html.replace('<!-- Legenda dinâmica -->', legendContent);
-        html = html.replace('Documento gerado automaticamente', `Documento gerado automaticamente em ${dataAtual} às ${horaAtual}`);
-
-        return html;
     }
 
     async gerarPDF(htmlContent, filenamePrefix) {
