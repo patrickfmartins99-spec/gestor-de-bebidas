@@ -11,7 +11,7 @@ class PDFGenerator {
             // Criar conteúdo HTML diretamente
             const htmlContent = this.criarConteudoHTML(dados);
             
-            // Gerar o PDF
+            // Gerar o PDF diretamente sem abrir nova janela
             await this.gerarPDF(htmlContent, filenamePrefix);
             
             showNotification('Relatório gerado com sucesso!', 'success');
@@ -99,11 +99,11 @@ class PDFGenerator {
 
                 tabelaRows += `
                     <tr>
-                        <td style="padding: 6px;">${bebida.nome}</td>
-                        <td style="padding: 6px; text-align: center;">${depositoTexto}</td>
-                        <td style="padding: 6px; text-align: center;">${freezerUnidades}</td>
-                        <td style="padding: 6px; text-align: center; font-weight: bold; ${totalUnidades === 0 ? 'background-color: #fff3cd;' : ''}">${totalUnidades}</td>
-                        ${temComparativo ? `<td style="padding: 6px; text-align: center; font-weight: bold; ${variacaoStyle}">${variacaoTexto}</td>` : ''}
+                        <td style="padding: 6px; width: 25%;">${bebida.nome}</td>
+                        <td style="padding: 6px; text-align: center; width: 15%;">${depositoTexto}</td>
+                        <td style="padding: 6px; text-align: center; width: 15%;">${freezerUnidades}</td>
+                        <td style="padding: 6px; text-align: center; font-weight: bold; width: 15%; ${totalUnidades === 0 ? 'background-color: #fff3cd;' : ''}">${totalUnidades}</td>
+                        ${temComparativo ? `<td style="padding: 6px; text-align: center; font-weight: bold; width: 15%; ${variacaoStyle}">${variacaoTexto}</td>` : ''}
                     </tr>
                 `;
             });
@@ -119,37 +119,39 @@ class PDFGenerator {
                     body { 
                         font-family: Arial, sans-serif; 
                         font-size: 12px; 
-                        padding: 20px; 
+                        padding: 10px; 
                         color: #333;
                         line-height: 1.4;
+                        width: 100%;
+                        box-sizing: border-box;
                     }
                     .header { 
                         text-align: center; 
-                        margin-bottom: 20px; 
-                        padding-bottom: 15px; 
+                        margin-bottom: 15px; 
+                        padding-bottom: 10px; 
                         border-bottom: 2px solid #dc3545; 
                     }
                     .company-name { 
                         color: #dc3545; 
-                        font-size: 22px; 
+                        font-size: 20px; 
                         font-weight: bold; 
                         margin: 0; 
                     }
                     .report-title { 
-                        font-size: 16px; 
+                        font-size: 14px; 
                         color: #495057; 
                         margin: 5px 0; 
                     }
                     .info-box { 
                         background-color: #f8f9fa; 
-                        padding: 15px; 
+                        padding: 12px; 
                         border-radius: 5px; 
                         border-left: 4px solid #dc3545; 
-                        margin-bottom: 20px; 
+                        margin-bottom: 15px; 
+                        font-size: 11px;
                     }
                     .info-text { 
-                        margin: 4px 0; 
-                        font-size: 12px; 
+                        margin: 3px 0; 
                     }
                     .info-text strong { 
                         color: #495057; 
@@ -157,33 +159,42 @@ class PDFGenerator {
                     table { 
                         width: 100%; 
                         border-collapse: collapse; 
-                        margin-bottom: 15px; 
-                        font-size: 11px; 
+                        margin-bottom: 12px; 
+                        font-size: 10px;
+                        table-layout: fixed;
                     }
                     th { 
                         background-color: #495057; 
                         color: white; 
-                        padding: 10px; 
+                        padding: 8px 4px; 
                         border: 1px solid #dee2e6; 
                         text-align: center; 
                         font-weight: bold;
+                        font-size: 10px;
                     }
                     td { 
-                        padding: 8px; 
+                        padding: 6px 4px; 
                         border: 1px solid #dee2e6; 
+                        word-wrap: break-word;
                     }
                     .footer { 
                         text-align: center; 
-                        margin-top: 25px; 
-                        padding-top: 15px; 
+                        margin-top: 20px; 
+                        padding-top: 10px; 
                         border-top: 1px solid #dee2e6; 
-                        font-size: 10px; 
+                        font-size: 9px; 
                         color: #6c757d; 
                     }
                     .legend {
-                        font-size: 10px;
+                        font-size: 9px;
                         color: #6c757d;
-                        margin-top: 10px;
+                        margin-top: 8px;
+                    }
+                    @media print {
+                        body { 
+                            padding: 5mm; 
+                            margin: 0;
+                        }
                     }
                 </style>
             </head>
@@ -203,11 +214,11 @@ class PDFGenerator {
                 <table>
                     <thead>
                         <tr>
-                            <th>Bebida</th>
-                            <th>Depósito</th>
-                            <th>Freezer</th>
-                            <th>Total</th>
-                            ${temComparativo ? '<th>Variação</th>' : ''}
+                            <th style="width: 25%;">Bebida</th>
+                            <th style="width: 15%;">Depósito</th>
+                            <th style="width: 15%;">Freezer</th>
+                            <th style="width: 15%;">Total</th>
+                            ${temComparativo ? '<th style="width: 15%;">Variação</th>' : ''}
                         </tr>
                     </thead>
                     <tbody>
@@ -232,46 +243,48 @@ class PDFGenerator {
 
     async gerarPDF(htmlContent, filenamePrefix) {
         return new Promise((resolve, reject) => {
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(htmlContent);
-            printWindow.document.close();
-            
-            setTimeout(() => {
-                const options = {
-                    margin: [10, 10, 10, 10],
-                    filename: `${filenamePrefix}.pdf`,
-                    image: { 
-                        type: 'jpeg', 
-                        quality: 0.95 
-                    },
-                    html2canvas: { 
-                        scale: 2,
-                        useCORS: true, 
-                        logging: false,
-                        backgroundColor: '#ffffff',
-                        width: 800
-                    },
-                    jsPDF: { 
-                        unit: 'mm', 
-                        format: 'a4', 
-                        orientation: 'portrait',
-                        compress: true
-                    }
-                };
+            // Criar elemento temporário em vez de nova janela
+            const element = document.createElement('div');
+            element.style.position = 'absolute';
+            element.style.left = '-9999px';
+            element.innerHTML = htmlContent;
+            document.body.appendChild(element);
 
-                html2pdf()
-                    .set(options)
-                    .from(printWindow.document.body)
-                    .save()
-                    .then(() => {
-                        printWindow.close();
-                        resolve();
-                    })
-                    .catch(error => {
-                        printWindow.close();
-                        reject(error);
-                    });
-            }, 500);
+            const options = {
+                margin: [5, 5, 5, 5],
+                filename: `${filenamePrefix}.pdf`,
+                image: { 
+                    type: 'jpeg', 
+                    quality: 0.95 
+                },
+                html2canvas: { 
+                    scale: 2,
+                    useCORS: true, 
+                    logging: false,
+                    backgroundColor: '#ffffff',
+                    width: 800,
+                    height: element.scrollHeight
+                },
+                jsPDF: { 
+                    unit: 'mm', 
+                    format: 'a4', 
+                    orientation: 'portrait',
+                    compress: true
+                }
+            };
+
+            html2pdf()
+                .set(options)
+                .from(element)
+                .save()
+                .then(() => {
+                    document.body.removeChild(element);
+                    resolve();
+                })
+                .catch(error => {
+                    document.body.removeChild(element);
+                    reject(error);
+                });
         });
     }
 }
