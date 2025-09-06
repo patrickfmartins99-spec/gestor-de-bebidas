@@ -363,7 +363,10 @@ const setupContagemPage = () => {
 
     showNotification('Contagem salva com sucesso! O relatório será gerado.', 'success');
     formContagemBebidas.reset();
-    gerarRelatorioPDFBebidas(novaContagem, `Relatorio_Contagem_Bebidas`);
+    
+    // ATUALIZAÇÃO AQUI
+    pdfGenerator.gerarRelatorioPDF(novaContagem, `Relatorio_Contagem_Bebidas`, 'contagem');
+    
     renderizarListaBebidas(); // Reseta a lista após salvar
   };
 
@@ -419,11 +422,11 @@ const setupEstoquePage = () => {
     tabelaEstoqueBebidasBody.appendChild(fragment);
   };
 
-  // ATUALIZADO: Agora usa o pdfGenerator
   if (btnGerarPdfEstoqueBebidas) {
     btnGerarPdfEstoqueBebidas.addEventListener('click', () => {
       const ultimaContagem = AppState.getUltimaContagemBebidas();
       if (ultimaContagem) {
+        // ATUALIZAÇÃO AQUI
         pdfGenerator.gerarRelatorioPDF(ultimaContagem, 'Relatorio_Estoque_Atual_Bebidas', 'estoque');
       } else {
         showNotification('Não há dados de contagem para gerar o relatório de estoque.', 'warning');
@@ -513,7 +516,7 @@ const setupHistoricoPage = () => {
         const contagemId = e.currentTarget.dataset.id;
         const contagem = AppState.getHistoricoContagensBebidas().find(c => c.id === contagemId);
         if (contagem) {
-          // ATUALIZADO: Usa o pdfGenerator
+          // ATUALIZAÇÃO AQUI
           pdfGenerator.gerarRelatorioPDF(contagem, `Relatorio_Contagem_Bebidas_${contagem.data}`, 'contagem');
         }
       });
