@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Removida a importação do html2pdf.js -->
 </head>
 <body class="bg-light">
 
@@ -103,7 +103,7 @@
 
             <div class="d-grid gap-2 mt-4">
                 <button id="btnGerarPdfEstoqueBebidas" class="btn btn-info btn-lg">
-                    <i class="bi bi-file-earmark-pdf me-2"></i>Gerar PDF do Estoque
+                    <i class="bi bi-file-earmark-pdf me-2"></i>Gerar Relatório de Estoque
                 </button>
                 <a href="index.html" class="btn btn-outline-primary mt-2">
                     <i class="bi bi-plus-circle me-2"></i>Realizar Nova Contagem
@@ -119,7 +119,8 @@
 
     <!-- Scripts JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="pdf-generator.js"></script>
+    <!-- Removido o pdf-generator.js -->
     <script src="bebidas.js"></script>
+    <script src="relatorio-mobile.js"></script> <!-- Novo script adicionado -->
 </body>
 </html>
