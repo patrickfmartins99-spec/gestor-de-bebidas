@@ -178,11 +178,6 @@ const isDomingo = (dataString) => {
   return dateObj.getDay() === 0; // 0 = Domingo
 };
 
-// --- FUNÇÃO SIMPLIFICADA DE PDF ---
-const gerarRelatorioPDFBebidas = (contagem, filenamePrefix) => {
-    pdfGenerator.gerarRelatorioPDF(contagem, filenamePrefix, 'contagem');
-};
-
 // --- LÓGICA PARA A TELA DE CONTAGEM (index.html) ---
 const setupContagemPage = () => {
   const formContagemBebidas = document.getElementById('formContagemBebidas');
@@ -364,10 +359,10 @@ const setupContagemPage = () => {
     showNotification('Contagem salva com sucesso! O relatório será gerado.', 'success');
     formContagemBebidas.reset();
     
-    // ATUALIZAÇÃO AQUI
+    // ATUALIZAÇÃO: Usar o novo gerador de relatórios
     setTimeout(() => {
-    pdfGenerator.gerarRelatorioPDF(novaContagem, `Relatorio_Contagem_Bebidas`, 'contagem');
-}, 500);
+      relatorioGenerator.gerarRelatorio(novaContagem, `Relatorio_Contagem_Bebidas`, 'contagem');
+    }, 500);
     
     renderizarListaBebidas(); // Reseta a lista após salvar
   };
@@ -428,8 +423,8 @@ const setupEstoquePage = () => {
     btnGerarPdfEstoqueBebidas.addEventListener('click', () => {
       const ultimaContagem = AppState.getUltimaContagemBebidas();
       if (ultimaContagem) {
-        // ATUALIZAÇÃO AQUI
-        pdfGenerator.gerarRelatorioPDF(ultimaContagem, 'Relatorio_Estoque_Atual_Bebidas', 'estoque');
+        // ATUALIZAÇÃO: Usar o novo gerador de relatórios
+        relatorioGenerator.gerarRelatorio(ultimaContagem, 'Relatorio_Estoque_Atual_Bebidas', 'estoque');
       } else {
         showNotification('Não há dados de contagem para gerar o relatório de estoque.', 'warning');
       }
@@ -518,8 +513,8 @@ const setupHistoricoPage = () => {
         const contagemId = e.currentTarget.dataset.id;
         const contagem = AppState.getHistoricoContagensBebidas().find(c => c.id === contagemId);
         if (contagem) {
-          // ATUALIZAÇÃO AQUI
-          pdfGenerator.gerarRelatorioPDF(contagem, `Relatorio_Contagem_Bebidas_${contagem.data}`, 'contagem');
+          // ATUALIZAÇÃO: Usar o novo gerador de relatórios
+          relatorioGenerator.gerarRelatorio(contagem, `Relatorio_Contagem_Bebidas_${contagem.data}`, 'contagem');
         }
       });
     });
