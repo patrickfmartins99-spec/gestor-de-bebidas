@@ -365,7 +365,9 @@ const setupContagemPage = () => {
     formContagemBebidas.reset();
     
     // ATUALIZAÇÃO AQUI
+    setTimeout(() => {
     pdfGenerator.gerarRelatorioPDF(novaContagem, `Relatorio_Contagem_Bebidas`, 'contagem');
+}, 500);
     
     renderizarListaBebidas(); // Reseta a lista após salvar
   };
